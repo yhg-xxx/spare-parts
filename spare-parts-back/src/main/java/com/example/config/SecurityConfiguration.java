@@ -21,6 +21,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 允许所有 OPTIONS 请求
                         .requestMatchers("/login/**").permitAll()
                         .requestMatchers("/files/**").permitAll()
+                        .requestMatchers("/purchase_order/**").permitAll()
 
 
 
