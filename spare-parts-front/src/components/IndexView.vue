@@ -21,6 +21,10 @@
             <el-icon><ChromeFilled /></el-icon>
             <span class="menu-text">库存管理</span>
           </router-link>
+          <router-link to="/view/transferManagement" class="menu-item">
+            <el-icon><ChromeFilled /></el-icon>
+            <span class="menu-text">调拨申请</span>
+          </router-link>
 
           <div class="menu-item logout" @click="handleLogout">
             <el-icon><SwitchButton /></el-icon>
@@ -33,6 +37,10 @@
           <router-link to="/view/warehouse" class="menu-item">
             <el-icon><SuitcaseLine /></el-icon>
             <span class="menu-text">库位信息</span>
+          </router-link>
+          <router-link to="/view/transferManagement1" class="menu-item">
+            <el-icon><ChromeFilled /></el-icon>
+            <span class="menu-text">调拨审核</span>
           </router-link>
 
 
