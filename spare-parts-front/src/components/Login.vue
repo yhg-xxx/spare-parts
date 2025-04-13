@@ -52,11 +52,11 @@ const form =reactive({
 })
 const login = async ()=> {
   const response = await axios.post('http://localhost:8080/login', {
-    username: form.username,
+    name: form.username,
     password: form.password
   })
   console.log(response.data)
-  if (response.data.username === form.username && response.data.password === form.password) {
+  if (response.data.name === form.username && response.data.password === form.password) {
     console.log(response.data)
     ElMessage.success("登录成功");
 
