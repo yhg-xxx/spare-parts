@@ -32,6 +32,14 @@ const router = createRouter({
                         path: 'inventory',
                         name: 'inventory',
                         component: () => import('@/components/Inventory.vue')
+                    },{
+                        path: 'transferManagement',
+                        name: 'transferManagement',
+                        component: () => import('@/components/TransferRecord.vue'),
+                    },{
+                        path: 'transferManagement1',
+                        name: 'transferManagement1',
+                        component: () => import('@/components/TransferRecord1.vue'),
                     },
             ]
             }

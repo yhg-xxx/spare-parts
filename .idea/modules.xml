@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/spare-parts.iml" filepath="$PROJECT_DIR$/spare-parts.iml" />
+      <module fileurl="file://$PROJECT_DIR$/spare-parts-back/spare-parts-back.iml" filepath="$PROJECT_DIR$/spare-parts-back/spare-parts-back.iml" />
       <module fileurl="file://$PROJECT_DIR$/spare-parts-front.iml" filepath="$PROJECT_DIR$/spare-parts-front.iml" />
     </modules>
   </component>
