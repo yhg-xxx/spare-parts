@@ -40,6 +40,10 @@ const router = createRouter({
                         path: 'transferManagement1',
                         name: 'transferManagement1',
                         component: () => import('@/components/TransferRecord1.vue'),
+                    },{
+                        path: 'sparepart',
+                        name: 'sparepart',
+                        component: () => import('@/components/Sparepart.vue'),
                     },
             ]
             }

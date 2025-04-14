@@ -26,6 +26,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/inventory/**").permitAll()
                         .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/inventory/**").permitAll()
+                        .requestMatchers("/spare_part/**").permitAll()
 
 
 
