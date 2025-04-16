@@ -42,7 +42,10 @@
             <el-icon><ChromeFilled /></el-icon>
             <span class="menu-text">调拨审核</span>
           </router-link>
-
+          <router-link to="/view/sparepart" class="menu-item">
+            <el-icon><ChromeFilled /></el-icon>
+            <span class="menu-text">备件信息</span>
+          </router-link>
 
           <!-- 修改退出登录按钮（所有菜单中） -->
           <div class="menu-item logout" @click="handleLogout">
@@ -51,32 +54,41 @@
           </div>
         </div>
 
-<!--        &lt;!&ndash; 评分员菜单 &ndash;&gt;-->
-<!--        <div v-else-if="user.usercategory === '2'" class="menu-container">-->
-<!--          <router-link to="/view/ping" class="menu-item">-->
-<!--            <el-icon><SuitcaseLine /></el-icon>-->
-<!--            <span class="menu-text">日报评分</span>-->
-<!--          </router-link>-->
+        <!-- 评分员菜单 -->
+        <div v-else-if="user.role === '现场工程师'" class="menu-container">
+          <router-link to="/view/" class="menu-item">
+            <el-icon><SuitcaseLine /></el-icon>
+            <span class="menu-text">领用申请</span>
+          </router-link>
 
-<!--          <router-link to="/view/tong" class="menu-item">-->
-<!--            <el-icon><DocumentChecked /></el-icon>-->
-<!--            <span class="menu-text">发表情况统计</span>-->
-<!--          </router-link>-->
+          <router-link to="/view/" class="menu-item">
+            <el-icon><DocumentChecked /></el-icon>
+            <span class="menu-text">备件返还</span>
+          </router-link>
 
-<!--          <router-link to="/view/xiao" class="menu-item">-->
-<!--            <el-icon><Edit /></el-icon>-->
-<!--            <span class="menu-text">通知学生</span>-->
-<!--          </router-link>-->
-
-<!--          &lt;!&ndash; 修改退出登录按钮（所有菜单中） &ndash;&gt;-->
-<!--          <div class="menu-item logout" @click="handleLogout">-->
-<!--            <el-icon><SwitchButton /></el-icon>-->
-<!--            <span class="menu-text">退出登录</span>-->
-<!--          </div>-->
+          <!-- 修改退出登录按钮（所有菜单中） -->
+          <div class="menu-item logout" @click="handleLogout">
+            <el-icon><SwitchButton /></el-icon>
+            <span class="menu-text">退出登录</span>
+          </div>
         </div>
+        <!-- 评分员菜单 -->
+        <div v-else-if="user.role === '二级维修人员'" class="menu-container">
+          <router-link to="/view/" class="menu-item">
+            <el-icon><DocumentChecked /></el-icon>
+            <span class="menu-text"></span>
+          </router-link>
+
+          <!-- 修改退出登录按钮（所有菜单中） -->
+          <div class="menu-item logout" @click="handleLogout">
+            <el-icon><SwitchButton /></el-icon>
+            <span class="menu-text">退出登录</span>
+          </div>
+        </div>
+      </div>
 
 
-      <div class="main-content">
+          <div class="main-content">
         <router-view></router-view>
       </div>
   </template>

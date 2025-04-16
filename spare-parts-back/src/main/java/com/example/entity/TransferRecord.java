@@ -9,14 +9,14 @@ public class TransferRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int transferId;
 
-    @Column(name = "from_location_id")
-    private int fromLocationId;
+    @Column(name = "from_location_name")
+    private String fromLocationName;
 
-    @Column(name = "to_location_id")
-    private int toLocationId;
+    @Column(name = "to_location_name")
+    private String toLocationName;
 
-    @Column(name = "part_id")
-    private int partId;
+    @Column(name = "part_name")
+    private String partName;
 
     @Column(name = "transfer_reason")
     private String transferReason;
@@ -40,28 +40,28 @@ public class TransferRecord {
         this.transferId = transferId;
     }
 
-    public int getFromLocationId() {
-        return fromLocationId;
+    public String getFromLocationName() {
+        return fromLocationName;
     }
 
-    public void setFromLocationId(int fromLocationId) {
-        this.fromLocationId = fromLocationId;
+    public void setFromLocationName(String fromLocationName) {
+        this.fromLocationName = fromLocationName;
     }
 
-    public int getToLocationId() {
-        return toLocationId;
+    public String getToLocationName() {
+        return toLocationName;
     }
 
-    public void setToLocationId(int toLocationId) {
-        this.toLocationId = toLocationId;
+    public void setToLocationName(String toLocationName) {
+        this.toLocationName = toLocationName;
     }
 
-    public int getPartId() {
-        return partId;
+    public String getPartName() {
+        return partName;
     }
 
-    public void setPartId(int partId) {
-        this.partId = partId;
+    public void setPartName(String partName) {
+        this.partName = partName;
     }
 
     public String getTransferReason() {

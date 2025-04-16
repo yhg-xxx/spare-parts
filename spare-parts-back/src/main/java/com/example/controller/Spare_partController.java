@@ -2,8 +2,13 @@ package com.example.controller;
 
 import com.example.dao.Spare_partRepository;
 import com.example.entity.Spare_part;
+import com.example.service.SparePartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,6 +51,20 @@ public class Spare_partController {
         } catch (Exception e) {
             return 0; // 其他异常
         }
+    }
+
+    @Autowired
+    private SparePartService sparePartService;
+
+    @GetMapping("/spare_part")
+    public ResponseEntity<Page<Spare_part>> getSpareParts(
+            @RequestParam(required = false) String partName,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Spare_part> result = sparePartService.searchParts(partName, pageable);
+        return ResponseEntity.ok(result);
     }
     //获取所有
     @GetMapping("/spare_part/x")

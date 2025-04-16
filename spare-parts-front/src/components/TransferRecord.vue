@@ -5,9 +5,9 @@
     <!-- 调拨记录列表 -->
     <el-table :data="transferList" stripe style="width: 100%">
       <el-table-column prop="transferId" label="调拨记录ID" />
-      <el-table-column prop="fromLocationId" label="原库位ID" />
-      <el-table-column prop="toLocationId" label="目标库位ID" />
-      <el-table-column prop="partId" label="备件ID" />
+      <el-table-column prop="fromLocationName" label="原仓库" />
+      <el-table-column prop="toLocationName" label="目标仓库" />
+      <el-table-column prop="partName" label="备件名称" />
       <el-table-column prop="transferReason" label="调拨事由" />
       <el-table-column prop="applicantId" label="申请人ID" />
       <el-table-column prop="status" label="状态">
@@ -27,14 +27,14 @@
     <!-- 新增调拨记录对话框 -->
     <el-dialog v-model="addTransferDialogVisible" title="新增调拨记录" @close="clearAddTransferForm">
       <el-form :model="addTransferForm" ref="addTransferFormRef" label-width="100px">
-        <el-form-item label="原库位ID" prop="fromLocationId">
-          <el-input v-model.number="addTransferForm.fromLocationId" placeholder="请输入原库位ID" type="number"></el-input>
+        <el-form-item label="原仓库" prop="fromLocationName">
+          <el-input v-model="addTransferForm.fromLocationName" placeholder="请输入原仓库" ></el-input>
         </el-form-item>
-        <el-form-item label="目标库位ID" prop="toLocationId">
-          <el-input v-model.number="addTransferForm.toLocationId" placeholder="请输入目标库位ID" type="number"></el-input>
+        <el-form-item label="目标仓库" prop="toLocationName">
+          <el-input v-model="addTransferForm.toLocationName" placeholder="请输入目标仓库"></el-input>
         </el-form-item>
-        <el-form-item label="备件ID" prop="partId">
-          <el-input v-model.number="addTransferForm.partId" placeholder="请输入备件ID" type="number"></el-input>
+        <el-form-item label="备件名称" prop="partName">
+          <el-input v-model="addTransferForm.partName" placeholder="请输入备件名称"></el-input>
         </el-form-item>
         <el-form-item label="调拨事由" prop="transferReason">
           <el-input v-model="addTransferForm.transferReason" placeholder="请输入调拨事由"></el-input>
@@ -74,9 +74,9 @@ onMounted(async () => {
 
 // 新增调拨记录表单
 const addTransferForm = ref({
-  fromLocationId: null,
-  toLocationId: null,
-  partId: null,
+  fromLocationName: null,
+  toLocationName: null,
+  partName: null,
   transferReason: '',
   status: '待审核', // 默认状态
 });
@@ -89,9 +89,9 @@ const openAddTransferDialog = () => {
 // 清空新增调拨记录表单
 const clearAddTransferForm = () => {
   addTransferForm.value = {
-    fromLocationId: null,
-    toLocationId: null,
-    partId: null,
+    fromLocationName: null,
+    toLocationName: null,
+    partName: null,
     transferReason: '',
     status: '待审核',
   };

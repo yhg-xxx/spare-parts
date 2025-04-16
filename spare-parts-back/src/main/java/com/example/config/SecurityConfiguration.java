@@ -29,9 +29,6 @@ public class SecurityConfiguration {
                         .requestMatchers("/spare_part/**").permitAll()
 
 
-
-
-
                 )
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))

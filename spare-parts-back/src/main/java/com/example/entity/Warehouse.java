@@ -10,9 +10,10 @@ public class Warehouse {
     int location_id;
     String location_code;
     String location_name;
-    String warehouse;
     String description;
     String status;
+    String created_at;
+    String name;
 
     public int getLocation_id() {
         return location_id;
@@ -38,14 +39,6 @@ public class Warehouse {
         this.location_name = location_name;
     }
 
-    public String getWarehouse() {
-        return warehouse;
-    }
-
-    public void setWarehouse(String warehouse) {
-        this.warehouse = warehouse;
-    }
-
     public String getDescription() {
         return description;
     }
@@ -60,5 +53,21 @@ public class Warehouse {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getCreated_at() {
+        return created_at;
+    }
+
+    public void setCreated_at(String created_at) {
+        this.created_at = created_at;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

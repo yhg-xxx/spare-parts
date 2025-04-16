@@ -9,12 +9,10 @@ public class Inventory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int inventory_id;
-    int part_id;
-    int location_id;
-    String sn;
+    String  part_name;
+    String  location_name;
     String status;
-    String inbound_time;
-    String outbound_time;
+    String number;
 
     public int getInventory_id() {
         return inventory_id;
@@ -24,28 +22,20 @@ public class Inventory {
         this.inventory_id = inventory_id;
     }
 
-    public int getPart_id() {
-        return part_id;
+    public String getPart_name() {
+        return part_name;
     }
 
-    public void setPart_id(int part_id) {
-        this.part_id = part_id;
+    public void setPart_name(String part_name) {
+        this.part_name = part_name;
     }
 
-    public int getLocation_id() {
-        return location_id;
+    public String getLocation_name() {
+        return location_name;
     }
 
-    public void setLocation_id(int location_id) {
-        this.location_id = location_id;
-    }
-
-    public String getSn() {
-        return sn;
-    }
-
-    public void setSn(String sn) {
-        this.sn = sn;
+    public void setLocation_name(String location_name) {
+        this.location_name = location_name;
     }
 
     public String getStatus() {
@@ -56,19 +46,11 @@ public class Inventory {
         this.status = status;
     }
 
-    public String getInbound_time() {
-        return inbound_time;
+    public String getNumber() {
+        return number;
     }
 
-    public void setInbound_time(String inbound_time) {
-        this.inbound_time = inbound_time;
-    }
-
-    public String getOutbound_time() {
-        return outbound_time;
-    }
-
-    public void setOutbound_time(String outbound_time) {
-        this.outbound_time = outbound_time;
+    public void setNumber(String number) {
+        this.number = number;
     }
 }

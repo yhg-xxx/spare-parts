@@ -26,6 +26,7 @@
       <el-table-column prop="workshop" label="所属工区" />
       <el-table-column prop="spare_part_name" label="备件名称" />
       <el-table-column prop="spare_part_model" label="备件型号" />
+      <el-table-column prop="number" label="数量" />
       <el-table-column prop="status" label="状态" />
       <el-table-column prop="created_at" label="创建时间">
         <template #default="{ row }">
@@ -40,7 +41,7 @@
     </el-table>
 
     <!-- 新增订单对话框 -->
-    <el-dialog v-model="addDailyDialogVisible" title="新增日报" @close="clearAddDailyForm">
+    <el-dialog v-model="addDailyDialogVisible" title="新增订单" @close="clearAddDailyForm">
       <!-- 修改对话框中的表单定义 -->
       <el-form
           :model="addDailyForm"
@@ -79,6 +80,13 @@
             clearable
         ></el-input>
       </el-form-item>
+        <el-form-item label="数量" prop="number">
+          <el-input
+              v-model="addDailyForm.number"
+              placeholder="请输入备件数量"
+              clearable
+          ></el-input>
+        </el-form-item>
       </el-form>
       <!--foot-->
       <div slot="footer" class="dialog-footer">
@@ -99,8 +107,8 @@ import {Plus, Search} from "@element-plus/icons-vue";
 const querySparePartName = ref('');
 
 const currentUser = ref({})
-const dailyList = ref([]); // 日报数据列表
-const addDailyDialogVisible = ref(false); // 新增日报对话框
+const dailyList = ref([]); // 订单数据列表
+const addDailyDialogVisible = ref(false); // 新增订单对话框
 // 在script setup顶部添加模板引用声明
 const addDailyFormRef = ref(null);
 
@@ -123,6 +131,7 @@ const addDailyForm = ref({
   workshop: '',
   spare_part_name: '',
   spare_part_model: '',
+  number:'',
   status: '待审核',      // 状态（不需要用户输入，直接设为初始值）
 
 });
@@ -142,6 +151,7 @@ const clearAddDailyForm = () => {
     workshop: '',
     spare_part_name: '',
     spare_part_model: '',
+    number:'',
   };
 };
 
@@ -159,6 +169,9 @@ const addDailyFormRules = ref({
   ],
   spare_part_model: [
     { required: true, message: '请输入备件型号', trigger: 'blur' }
+  ],
+  number: [
+    { required: true, message: '请输入备件数量', trigger: 'blur' }
   ]
 });
 // 修改获取订单列表方法，支持参数

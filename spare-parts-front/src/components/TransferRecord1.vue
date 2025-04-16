@@ -3,9 +3,9 @@
     <!-- 调拨记录列表 -->
     <el-table :data="transferList" stripe style="width: 100%">
       <el-table-column prop="transferId" label="调拨记录ID" />
-      <el-table-column prop="fromLocationId" label="原库位ID" />
-      <el-table-column prop="toLocationId" label="目标库位ID" />
-      <el-table-column prop="partId" label="备件ID" />
+      <el-table-column prop="fromLocationName" label="原仓库" />
+      <el-table-column prop="toLocationName" label="目标仓库" />
+      <el-table-column prop="partName" label="备件名称" />
       <el-table-column prop="transferReason" label="调拨事由" />
       <el-table-column prop="applicantId" label="申请人ID" />
       <el-table-column prop="status" label="状态">

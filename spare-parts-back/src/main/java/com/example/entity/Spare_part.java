@@ -10,28 +10,27 @@ public class Spare_part {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int part_id;
-    String part_name;
+    @Column(name = "part_name")  // 映射数据库字段
+    private String partName;
     String part_model;
     String category;
     String manufacturer;
     String unit;
-    LocalDate warranty_until;
-    String status;
-    String type;
+    String number;
+    String anquan;
 
     public Spare_part() {
     }
 
-    public Spare_part(int part_id, String part_name, String part_model, String category, String manufacturer, String unit, LocalDate warranty_until, String status, String type) {
+    public Spare_part(int part_id, String anquan, String number, String unit, String manufacturer, String category, String part_model, String part_name) {
         this.part_id = part_id;
-        this.part_name = part_name;
-        this.part_model = part_model;
-        this.category = category;
-        this.manufacturer = manufacturer;
+        this.anquan = anquan;
+        this.number = number;
         this.unit = unit;
-        this.warranty_until = warranty_until;
-        this.status = status;
-        this.type = type;
+        this.manufacturer = manufacturer;
+        this.category = category;
+        this.part_model = part_model;
+        this.partName = partName;
     }
 
     public int getPart_id() {
@@ -42,12 +41,12 @@ public class Spare_part {
         this.part_id = part_id;
     }
 
-    public String getPart_name() {
-        return part_name;
+    public String getPartName() {
+        return partName;
     }
 
-    public void setPart_name(String part_name) {
-        this.part_name = part_name;
+    public void setPartName(String part_name) {
+        this.partName = part_name;
     }
 
     public String getPart_model() {
@@ -74,27 +73,27 @@ public class Spare_part {
         this.unit = unit;
     }
 
-    public LocalDate getWarranty_until() {
-        return warranty_until;
+    public String getManufacturer() {
+        return manufacturer;
     }
 
-    public void setWarranty_until(LocalDate warranty_until) {
-        this.warranty_until = warranty_until;
+    public void setManufacturer(String manufacturer) {
+        this.manufacturer = manufacturer;
     }
 
-    public String getStatus() {
-        return status;
+    public String getNumber() {
+        return number;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setNumber(String number) {
+        this.number = number;
     }
 
-    public String getType() {
-        return type;
+    public String getAnquan() {
+        return anquan;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setAnquan(String anquan) {
+        this.anquan = anquan;
     }
 }

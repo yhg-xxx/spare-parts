@@ -13,6 +13,7 @@ public class Purchase_order {
     String status;
     String spare_part_name;
     String spare_part_model;
+    String number;
     String created_at;
     String completed_at;
 
@@ -70,6 +71,14 @@ public class Purchase_order {
 
     public void setSpare_part_model(String spare_part_model) {
         this.spare_part_model = spare_part_model;
+    }
+
+    public String getNumber() {
+        return number;
+    }
+
+    public void setNumber(String number) {
+        this.number = number;
     }
 
     public String getCreated_at() {
