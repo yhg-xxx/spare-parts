@@ -25,7 +25,10 @@
             <el-icon><ChromeFilled /></el-icon>
             <span class="menu-text">调拨申请</span>
           </router-link>
-
+          <router-link to="/view/UsageRequestReview" class="menu-item">
+            <el-icon><ChromeFilled /></el-icon>
+            <span class="menu-text">领用审核</span>
+          </router-link>
           <div class="menu-item logout" @click="handleLogout">
             <el-icon><SwitchButton /></el-icon>
             <span class="menu-text">退出登录</span>
@@ -56,7 +59,7 @@
 
         <!-- 评分员菜单 -->
         <div v-else-if="user.role === '现场工程师'" class="menu-container">
-          <router-link to="/view/" class="menu-item">
+          <router-link to="/view/UsageRequestApply" class="menu-item">
             <el-icon><SuitcaseLine /></el-icon>
             <span class="menu-text">领用申请</span>
           </router-link>

@@ -38,6 +38,14 @@ const router = createRouter({
                         path: 'sparepart',
                         name: 'sparepart',
                         component: () => import('@/components/Sparepart.vue'),
+                    },{
+                        path: 'UsageRequestApply',
+                        name: 'UsageRequestApply',
+                        component: () => import('@/components/UsageApply.vue'),
+                    },{
+                        path: 'UsageRequestReview',
+                        name: 'UsageRequestReview',
+                        component: () => import('@/components/UsageReview.vue'),
                     },
             ]
             }
