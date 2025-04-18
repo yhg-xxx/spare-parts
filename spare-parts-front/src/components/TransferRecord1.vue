@@ -1,11 +1,36 @@
 <template>
   <div>
+    <!-- 批量操作按钮 -->
+    <div style="margin-bottom: 20px;">
+      <el-button
+          type="success"
+          :disabled="selectedTransfers.length === 0"
+          @click="handleBatchApprove"
+      >
+        一键通过
+      </el-button>
+      <el-button
+          type="danger"
+          :disabled="selectedTransfers.length === 0"
+          @click="handleBatchReject"
+      >
+        一键驳回
+      </el-button>
+    </div>
+
     <!-- 调拨记录列表 -->
-    <el-table :data="transferList" stripe style="width: 100%">
+    <el-table
+        :data="transferList"
+        stripe
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+    >
+      <el-table-column type="selection" width="55" :selectable="isSelectable" />
       <el-table-column prop="transferId" label="调拨记录ID" />
       <el-table-column prop="fromLocationName" label="原仓库" />
       <el-table-column prop="toLocationName" label="目标仓库" />
       <el-table-column prop="partName" label="备件名称" />
+      <el-table-column prop="quantity" label="数量" />
       <el-table-column prop="transferReason" label="调拨事由" />
       <el-table-column prop="applicantId" label="申请人ID" />
       <el-table-column prop="status" label="状态">
@@ -51,6 +76,7 @@ import axios from "axios";
 import router from "@/router.js";
 
 const transferList = ref([]); // 调拨记录数据列表
+const selectedTransfers = ref([]); // 选中的调拨记录
 
 onMounted(async () => {
   const user = JSON.parse(sessionStorage.getItem('user'))
@@ -71,6 +97,86 @@ const getTransferList = async () => {
     transferList.value = res.data.list || res.data;
   } catch (error) {
     ElMessage.error('获取调拨记录失败: ' + error.message)
+  }
+};
+
+// 处理表格选择变化
+const handleSelectionChange = (selection) => {
+  selectedTransfers.value = selection;
+};
+
+// 判断记录是否可选（只有待审核的记录可选）
+const isSelectable = (row) => {
+  return row.status === '待审核';
+};
+
+// 处理批量批准操作
+const handleBatchApprove = () => {
+  ElMessageBox.confirm(
+      `确定要通过选中的${selectedTransfers.value.length}条调拨申请吗？`,
+      '批量操作确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+  ).then(() => {
+    batchApproveTransfers();
+  }).catch(() => {
+    // 用户取消操作
+  });
+};
+
+// 处理批量驳回操作
+const handleBatchReject = () => {
+  ElMessageBox.confirm(
+      `确定要驳回选中的${selectedTransfers.value.length}条调拨申请吗？`,
+      '批量操作确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+  ).then(() => {
+    batchRejectTransfers();
+  }).catch(() => {
+    // 用户取消操作
+  });
+};
+
+// 批量批准调拨申请
+const batchApproveTransfers = async () => {
+  try {
+    const promises = selectedTransfers.value.map(transfer =>
+        axios.put(`http://localhost:8080/api/transfer/${transfer.transferId}/approve`, {}, {
+          withCredentials: true
+        })
+    );
+
+    await Promise.all(promises);
+    ElMessage.success(`成功批准${selectedTransfers.value.length}条调拨申请`);
+    selectedTransfers.value = [];
+    await getTransferList();
+  } catch (error) {
+    ElMessage.error('批量操作失败: ' + error.message);
+  }
+};
+
+// 批量驳回调拨申请
+const batchRejectTransfers = async () => {
+  try {
+    const promises = selectedTransfers.value.map(transfer =>
+        axios.put(`http://localhost:8080/api/transfer/${transfer.transferId}/reject`, {}, {
+          withCredentials: true
+        })
+    );
+
+    await Promise.all(promises);
+    ElMessage.success(`成功驳回${selectedTransfers.value.length}条调拨申请`);
+    selectedTransfers.value = [];
+    await getTransferList();
+  } catch (error) {
+    ElMessage.error('批量操作失败: ' + error.message);
   }
 };
 
@@ -154,8 +260,6 @@ const getStatusTagType = (status) => {
   }
 };
 </script>
-
-
 
 <style scoped>
 .dialog-footer {

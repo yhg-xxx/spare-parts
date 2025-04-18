@@ -4,9 +4,9 @@
     <el-button @click="openAddDailyDialog" type="primary" :icon="Plus">新增库存</el-button>
     <!-- 库存列表 -->
     <el-table :data="dailyList" stripe style="width: 100%">
-      <el-table-column prop="inventory_id" label="库存记录ID" />
-      <el-table-column prop="part_name" label="备件名称" />
-      <el-table-column prop="location_name" label="库存名称" />
+      <el-table-column prop="inventoryId" label="库存记录ID" />
+      <el-table-column prop="partName" label="备件名称" />
+      <el-table-column prop="locationName" label="库存名称" />
       <el-table-column prop="number" label="数量" />
       <el-table-column prop="status" label="库存状态" />
       <el-table-column fixed="right" label="操作" min-width="150">
@@ -22,11 +22,11 @@
     <el-dialog v-model="addDailyDialogVisible" title="新增库存" @close="clearAddDailyForm">
       <el-form :model="addDailyForm" ref="addDailyFormRef" label-width="100px">
 
-        <el-form-item label="备件名称" prop="part_name">
-          <el-input v-model="addDailyForm.part_name" placeholder="请输入备件编号"></el-input>
+        <el-form-item label="备件名称" prop="partName">
+          <el-input v-model="addDailyForm.partName" placeholder="请输入备件编号"></el-input>
         </el-form-item>
-        <el-form-item label="库位名称" prop="location_name">
-          <el-input v-model="addDailyForm.location_name" placeholder="请输入库位编号"></el-input>
+        <el-form-item label="库位名称" prop="locationName">
+          <el-input v-model="addDailyForm.locationName" placeholder="请输入库位编号"></el-input>
         </el-form-item>
         <el-form-item label="number" prop="数量">
           <el-input v-model="addDailyForm.number" placeholder="请输入数量"></el-input>
@@ -42,11 +42,11 @@
     <!-- 修改库存对话框 -->
     <el-dialog v-model="editDailyDialogVisible" title="修改库存" @close="clearEditDailyForm">
       <el-form :model="editDailyForm" ref="editDailyFormRef" label-width="100px">
-        <el-form-item label="备件名称" prop="part_name">
-          <el-input v-model="editDailyForm.part_name" placeholder="请输入备件编号"></el-input>
+        <el-form-item label="备件名称" prop="partName">
+          <el-input v-model="editDailyForm.partName" placeholder="请输入备件编号"></el-input>
         </el-form-item>
-        <el-form-item label="库位名称" prop="location_name">
-          <el-input v-model="editDailyForm.location_name" placeholder="请输入库位编号"></el-input>
+        <el-form-item label="库位名称" prop="locationName">
+          <el-input v-model="editDailyForm.locationName" placeholder="请输入库位编号"></el-input>
         </el-form-item>
         <el-form-item label="number" prop="数量">
           <el-input v-model="editDailyForm.number" placeholder="请输入数量"></el-input>
@@ -89,8 +89,8 @@ onMounted(async () => {
 // 新增库存表单
 const addDailyForm = ref({
 
-  part_name: '',
-  location_name: '',
+  partName: '',
+  locationName: '',
   number: '',
   status: '在库',      // 状态（不需要用户输入，直接设为初始值）
 
@@ -98,8 +98,8 @@ const addDailyForm = ref({
 
 // 修改库存表单
 const editDailyForm = ref({
-  part_name: '',
-  location_name: '',
+  partName: '',
+  locationName: '',
   number: '',
   status: '在库',      // 状态（不需要用户输入，直接设为初始值）
 
@@ -119,8 +119,8 @@ const openEditDailyDialog = (row) => {
 const clearAddDailyForm = () => {
   addDailyForm.value = {
     ...addDailyForm.value, // 保留已有值
-    part_name: '',
-    location_name: '',
+    partName: '',
+    locationName: '',
     number: '',
   };
 };
@@ -128,8 +128,8 @@ const clearAddDailyForm = () => {
 // 清空修改库存表单
 const clearEditDailyForm = () => {
   editDailyForm.value = {
-    part_name: '',
-    location_name: '',
+    partName: '',
+    locationName: '',
     number: '',
   };
 };

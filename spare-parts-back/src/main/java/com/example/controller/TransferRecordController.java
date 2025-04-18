@@ -28,6 +28,12 @@ public class TransferRecordController {
     public TransferRecord createTransfer(@RequestBody TransferRecord transfer) {
         return transferRecordService.createTransfer(transfer);
     }
+
+    @PostMapping("/batch")
+    public List<TransferRecord> createBatchTransfers(@RequestBody List<TransferRecord> transfers) {
+        return transferRecordService.createBatchTransfers(transfers);
+    }
+
     @PutMapping("/{id}/approve")
     public TransferRecord approveTransfer(@PathVariable int id) {
         return transferRecordService.updateStatus(id, "已通过");
@@ -37,6 +43,4 @@ public class TransferRecordController {
     public TransferRecord rejectTransfer(@PathVariable int id) {
         return transferRecordService.updateStatus(id, "已驳回");
     }
-
-
 }

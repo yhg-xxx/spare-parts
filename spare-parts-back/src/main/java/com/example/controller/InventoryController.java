@@ -38,7 +38,7 @@ public class InventoryController {
         try {
             // 检查ID是否存在
             if (inventoryRepository.existsById(inventory_id)) {
-                inventory.setInventory_id(inventory_id);
+                inventory.setInventoryId(inventory_id);
                 inventoryRepository.save(inventory);
                 return 1; // 更新成功返回1
             } else {

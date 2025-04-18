@@ -1,10 +1,12 @@
 package com.example.service;
 
 import com.example.dao.TransferRecordRepository;
+import com.example.dao.InventoryRepository;
 import com.example.entity.TransferRecord;
-
+import com.example.entity.Inventory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -16,6 +18,9 @@ public class TransferRecordService {
 
     @Autowired
     private TransferRecordRepository transferRecordRepository;
+
+    @Autowired
+    private InventoryRepository inventoryRepository;
 
     public List<TransferRecord> getAllTransfers() {
         return transferRecordRepository.findAll();
@@ -30,17 +35,70 @@ public class TransferRecordService {
         transfer.setCreatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         return transferRecordRepository.save(transfer);
     }
+
+    public List<TransferRecord> createBatchTransfers(List<TransferRecord> transfers) {
+        String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        for (TransferRecord transfer : transfers) {
+            transfer.setStatus("待审核");
+            transfer.setCreatedAt(currentTime);
+        }
+        return transferRecordRepository.saveAll(transfers);
+    }
+
+    @Transactional
     public TransferRecord updateStatus(int id, String status) {
         Optional<TransferRecord> optionalTransfer = transferRecordRepository.findById(id);
         if (optionalTransfer.isPresent()) {
             TransferRecord transfer = optionalTransfer.get();
             transfer.setStatus(status);
+
+            // 只有当状态变为"已通过"时才更新库存
+            if ("已通过".equals(status)) {
+                updateInventoryForTransfer(transfer);
+            }
+
             return transferRecordRepository.save(transfer);
         }
         return null;
     }
 
+    private void updateInventoryForTransfer(TransferRecord transfer) {
+        // 减少原仓库库存
+        Inventory fromInventory = inventoryRepository.findByPartNameAndLocationName(
+                transfer.getPartName(),
+                transfer.getFromLocationName()
+        );
 
+        if (fromInventory != null) {
+            int currentQuantity = Integer.parseInt(fromInventory.getNumber());
+            int transferQuantity = transfer.getQuantity();
 
+            if (currentQuantity >= transferQuantity) {
+                // 更新原仓库库存
+                fromInventory.setNumber(String.valueOf(currentQuantity - transferQuantity));
+                inventoryRepository.save(fromInventory);
 
+                // 增加目标仓库库存
+                Inventory toInventory = inventoryRepository.findByPartNameAndLocationName(
+                        transfer.getPartName(),
+                        transfer.getToLocationName()
+                );
+
+                if (toInventory != null) {
+                    // 如果目标仓库已有该备件，增加数量
+                    int toCurrentQuantity = Integer.parseInt(toInventory.getNumber());
+                    toInventory.setNumber(String.valueOf(toCurrentQuantity + transferQuantity));
+                } else {
+                    // 如果目标仓库没有该备件，创建新记录
+                    toInventory = new Inventory();
+                    toInventory.setPartName(transfer.getPartName());
+                    toInventory.setLocationName(transfer.getToLocationName());
+                    toInventory.setNumber(String.valueOf(transfer.getQuantity()));
+                    toInventory.setStatus("在库");
+                }
+
+                inventoryRepository.save(toInventory);
+            }
+        }
+    }
 }

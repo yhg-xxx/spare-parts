@@ -5,37 +5,46 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "inventory")
 public class Inventory {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int inventory_id;
-    String  part_name;
-    String  location_name;
-    String status;
-    String number;
+    private int inventoryId;
 
-    public int getInventory_id() {
-        return inventory_id;
+    @Column(name = "part_name")  // 明确指定数据库列名
+    private String partName;
+
+    @Column(name = "location_name")
+    private String locationName;
+
+    private String status;
+    private String number;
+
+    // 必须添加无参构造函数
+    public Inventory() {
     }
 
-    public void setInventory_id(int inventory_id) {
-        this.inventory_id = inventory_id;
+    // 更新 getters 和 setters 使用标准命名
+    public int getInventoryId() {
+        return inventoryId;
     }
 
-    public String getPart_name() {
-        return part_name;
+    public void setInventoryId(int inventoryId) {
+        this.inventoryId = inventoryId;
     }
 
-    public void setPart_name(String part_name) {
-        this.part_name = part_name;
+    public String getPartName() {
+        return partName;
     }
 
-    public String getLocation_name() {
-        return location_name;
+    public void setPartName(String partName) {
+        this.partName = partName;
     }
 
-    public void setLocation_name(String location_name) {
-        this.location_name = location_name;
+    public String getLocationName() {
+        return locationName;
+    }
+
+    public void setLocationName(String locationName) {
+        this.locationName = locationName;
     }
 
     public String getStatus() {
