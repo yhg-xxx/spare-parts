@@ -46,6 +46,10 @@ const router = createRouter({
                         path: 'UsageRequestReview',
                         name: 'UsageRequestReview',
                         component: () => import('@/components/UsageReview.vue'),
+                    },{
+                        path: 'inbound',
+                        name: 'inbound',
+                        component: () => import('@/components/Inbound.vue'),
                     },
             ]
             }

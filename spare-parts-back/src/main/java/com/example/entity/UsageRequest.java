@@ -21,8 +21,7 @@ public class UsageRequest implements Serializable {
     @Column(name = "applicant_id", columnDefinition = "INT COMMENT '申请人'")
     private Integer applicantId;
 
-    @Column(name = "sparepart_sn", columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '备件SN'")
-    private String sparepartSn;
+
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", columnDefinition = "ENUM('维修申领','维修借用') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '类型'")
@@ -56,13 +55,6 @@ public class UsageRequest implements Serializable {
         this.applicantId = applicantId;
     }
 
-    public String getSparepartSn() {
-        return sparepartSn;
-    }
-
-    public void setSparepartSn(String sparepartSn) {
-        this.sparepartSn = sparepartSn;
-    }
 
     public UsageType getType() {
         return type;
@@ -94,7 +86,6 @@ public class UsageRequest implements Serializable {
         return "UsageRequest{" +
                 "id=" + id +
                 ", applicantId=" + applicantId +
-                ", sparepartSn='" + sparepartSn + '\'' +
                 ", type=" + type +
                 ", status='" + status + '\'' +
                 ", createTime='" + createTime + '\'' +
