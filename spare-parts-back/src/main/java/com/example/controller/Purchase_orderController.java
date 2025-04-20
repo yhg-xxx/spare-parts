@@ -1,18 +1,31 @@
 package com.example.controller;
 
+import com.example.config.ResourceNotFoundException;
 import com.example.dao.Purchase_orderRepository;
+import com.example.dao.StatusHistoryRepository;
+import com.example.dao.UserRepository;
+import com.example.dto.StatusHistoryDTO;
+import com.example.entity.PurchaseOrderStatusHistory;
 import com.example.entity.Purchase_order;
+import com.example.entity.User;
 import com.example.service.PurchaseOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 public class Purchase_orderController {
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private Purchase_orderRepository purchase_orderRepository;
+    @Autowired
+    private StatusHistoryRepository statusHistoryRepository;
     @Autowired
     private PurchaseOrderService purchaseOrderService;
     //插入
@@ -24,45 +37,60 @@ public class Purchase_orderController {
     //获取待入库的采购单
     @GetMapping("/purchase_order/s")
     public List<Purchase_order> getPendingPurchaseOrders() {
-        return purchase_orderRepository.findByStatus("待入库");
+        return purchase_orderRepository.findByStatus("已完成");
     }
     @GetMapping("/purchase_order/a")
     public List<Purchase_order> getPurchaseOrders(@RequestParam(required = false) String spare_part_name) {
         return purchaseOrderService.findBySparePartName(spare_part_name);
     }
-    //根据order_id删除
-    @DeleteMapping("/purchase_order/{order_id}")
-    public Integer deletePurchase_order(@PathVariable int order_id) {
-        try {
-            purchase_orderRepository.deleteById(order_id);
-            return 1; // 删除成功返回1
-        } catch (EmptyResultDataAccessException e) {
-            // 捕获删除不存在的记录异常
-            return 0; // 删除失败返回0
-        } catch (Exception e) {
-            // 其他异常（如数据库连接失败）
-            return 0;
+    @PutMapping("/purchase_order/{orderId}/status")
+    public ResponseEntity<?> updateStatus(
+            @PathVariable Integer orderId,
+            @RequestBody Map<String, Object> payload) {
+
+        String newStatus = (String) payload.get("newStatus");
+        Integer operatorId = (Integer) payload.get("operatorId");
+
+        // 1. 更新订单状态
+        Purchase_order order = purchase_orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        order.setStatus(newStatus);
+        if ("已完成".equals(newStatus)) {
+            order.setCompleted_at(LocalDateTime.now().toString());
         }
+        purchase_orderRepository.save(order);
+// 在方法内获取实体
+        User operator = userRepository.findById(operatorId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        // 2. 记录状态变更历史
+        PurchaseOrderStatusHistory history = new PurchaseOrderStatusHistory();
+        history.setPurchaseOrder(order);// 使用完整的订单对象
+        history.setStatus(newStatus);
+        history.setChangedBy(operator); // 使用完整的用户对象
+        history.setChangedAt(LocalDateTime.now());
+        statusHistoryRepository.save(history);
+
+        return ResponseEntity.ok().build();
+
+
     }
-//根据order_id修改
-    @PutMapping("/purchase_order/{order_id}")
-    public Integer updatePurchase_order(@PathVariable int order_id, @RequestBody Purchase_order purchase_order) {
-        try {
-            // 检查ID是否存在
-            if (purchase_orderRepository.existsById(order_id)) {
-                purchase_order.setOrder_id(order_id);
-                purchase_orderRepository.save(purchase_order);
-                return 1; // 更新成功返回1
-            } else {
-                return 0; // ID不存在返回0
-            }
-        } catch (Exception e) {
-            return 0; // 其他异常
-        }
-    }
-//获取所有
-    @GetMapping("/purchase_order/x")
-    public List<Purchase_order> getAllPurchase_orders() {
-        return purchase_orderRepository.findAll();
+
+    @GetMapping("/purchase_order/{orderId}/histories")
+    public ResponseEntity<List<StatusHistoryDTO>> getStatusHistories(
+            @PathVariable Integer orderId) {
+
+        List<PurchaseOrderStatusHistory> histories =
+                statusHistoryRepository.findByPurchaseOrderOrderByChangedAtAsc(
+                        purchase_orderRepository.findById(orderId).orElseThrow()
+                );
+
+        List<StatusHistoryDTO> dtos = histories.stream()
+                .map(history -> new StatusHistoryDTO(
+                        history.getStatus(),
+                        history.getChangedAt(),
+                        history.getChangedBy().getName()
+                )).collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
     }
 }

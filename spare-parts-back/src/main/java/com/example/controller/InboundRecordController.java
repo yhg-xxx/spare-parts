@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,11 +43,24 @@ public class InboundRecordController {
 
         return service.createInboundRecords(request.getOrderId(), request.getRequests());
     }
-    // InboundRecordController.java
+
     @GetMapping("/with-purchase")
-    public List<InboundWithPurchaseDTO> getAllWithPurchase(
-            @RequestParam(required = false) String spare_part_name) { // 添加查询参数
-        return service.findAllWithPurchaseOrders(spare_part_name);
+    public Page<InboundWithPurchaseDTO> getAllWithPurchase(
+            @RequestParam(required = false) String spare_part_name,
+            @RequestParam(required = false) String sn,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return service.findAllWithPurchaseOrders(
+                spare_part_name,
+                sn,
+                startTime,
+                endTime,
+                page,
+                size
+        );
     }
     //查看详情
     @GetMapping("/{inboundId}/with-purchase")

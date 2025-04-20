@@ -10,14 +10,21 @@ import com.example.entity.InboundRecord;
 import com.example.entity.Inventory;
 import com.example.entity.Purchase_order;
 import com.example.entity.Warehouse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 
 import java.util.stream.Collectors;
@@ -47,30 +54,58 @@ public class InboundRecordService {
         return new InboundWithPurchaseDTO(inbound, order);
     }
 
-    // 新增方法：获取所有入库记录及关联采购单
-    // InboundRecordService.java
-    public List<InboundWithPurchaseDTO> findAllWithPurchaseOrders(String sparePartName) {
-        List<InboundRecord> inbounds = repository.findAll();
+    public Page<InboundWithPurchaseDTO> findAllWithPurchaseOrders(
+            String sparePartName,
+            String sn,
+            String startTime,
+            String endTime,
+            int page,
+            int size) {
 
-        return inbounds.stream()
-                .filter(inbound -> {
-                    // 获取关联的采购单
-                    Purchase_order order = purchaseOrderRepository
-                            .findById(inbound.getOrderId())
-                            .orElse(null);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<InboundRecord> inboundPage = repository.findAll(pageable);
 
-                    // 过滤逻辑
-                    if (sparePartName == null || sparePartName.isEmpty()) {
-                        return true;
-                    }
-                    return order != null && order.getSpare_part_name() != null
-                            && order.getSpare_part_name().contains(sparePartName);
+        List<InboundWithPurchaseDTO> content = inboundPage.getContent().stream()
+                .map(inbound -> {
+                    Purchase_order order = purchaseOrderRepository.findById(inbound.getOrderId())
+                            .orElse(new Purchase_order());
+                    return new InboundWithPurchaseDTO(inbound, order);
                 })
-                .map(inbound -> new InboundWithPurchaseDTO(
-                        inbound,
-                        purchaseOrderRepository.findById(inbound.getOrderId()).orElse(null)
-                ))
+                .filter(dto -> {
+                    boolean match = true;
+
+                    // 备件名称过滤
+                    if (sparePartName != null && !sparePartName.isEmpty()) {
+                        match = dto.getPurchaseOrder().getSpare_part_name().contains(sparePartName);
+                    }
+
+                    // SN号过滤
+                    if (match && sn != null && !sn.isEmpty()) {
+                        match = dto.getInboundRecord().getSn().contains(sn);
+                    }
+
+                    // 时间范围过滤
+                    if (match && startTime != null) {
+                        LocalDateTime start = parseLocalDateTime(startTime);
+                        match = dto.getInboundRecord().getCreatedAt().isAfter(start);
+                    }
+
+                    if (match && endTime != null) {
+                        LocalDateTime end = parseLocalDateTime(endTime);
+                        match = dto.getInboundRecord().getCreatedAt().isBefore(end);
+                    }
+
+                    return match;
+                })
                 .collect(Collectors.toList());
+
+        return new PageImpl<>(content, pageable, inboundPage.getTotalElements());
+    }
+
+    // 新的日期解析方法
+    private LocalDateTime parseLocalDateTime(String dateString) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return LocalDateTime.parse(dateString, formatter);
     }
     // 新增：根据订单ID查询记录
     public List<InboundRecord> findByOrderId(Integer orderId) {
@@ -144,7 +179,6 @@ public class InboundRecordService {
 
         // 更新采购订单状态和完成时间
         po.setStatus("已入库");
-        po.setCompleted_at(LocalDateTime.now().toString()); // 根据数据库实际类型调整格式
         purchaseOrderRepository.save(po);
         updateInventory(po, savedRecords.get(0).getLocationId(), purchaseQty);
         return savedRecords;

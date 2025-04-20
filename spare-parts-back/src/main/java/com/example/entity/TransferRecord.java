@@ -26,16 +26,9 @@ public class TransferRecord {
 
     private String status;
 
-    @Column(name = "quantity")  // 新增数量字段
-    private int quantity;
+    @Column(name = "sn")  // 新增数量字段
+    private String  an;
 
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
 
     @Column(name = "created_at")
     private String createdAt;
@@ -108,5 +101,11 @@ public class TransferRecord {
     }
 
 
+    public String getAn() {
+        return an;
+    }
 
+    public void setAn(String an) {
+        this.an = an;
+    }
 }

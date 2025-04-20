@@ -2,75 +2,132 @@ package com.example.entity;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
 
 @Entity
-@Table(name = "spare_part")
+@Table(name = "spare_part",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "idx_part_name_unique", columnNames = {"part_name"})
+        },
+        indexes = {
+                @Index(name = "part_name", columnList = "part_name"),
+                @Index(name = "qqq-o", columnList = "location_id")
+        })
+
 public class Spare_part {
+
+    // 枚举定义
+    public enum Category {
+        机械类, 电气类, 液压类, 电子类, 其他
+    }
+
+    public enum SparePartStatus {
+        新好件, 修好件, 坏件, 二级修, 返厂修, 待调拨, 已报废
+    }
+
+    public enum SparePartType {
+        正常件, 在保件, 遗留件
+    }
+
+    // 实体字段
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int part_id;
-    @Column(name = "part_name")  // 映射数据库字段
+    @Column(name = "part_id", nullable = false)
+    private Integer partId;
+
+    @Column(name = "part_name", nullable = false, unique = true)
     private String partName;
-    String part_model;
-    String category;
-    String manufacturer;
-    String unit;
-    String number;
-    String anquan;
 
-    public Spare_part() {
+    @ManyToOne
+    @JoinColumn(name = "location_id", foreignKey = @ForeignKey(name = "qqq-o"))
+    private Warehouse warehouse;
+
+    @Column(name = "part_model")
+    private String partModel;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", columnDefinition = "ENUM('机械类','电气类','液压类','电子类','其他')")
+    private Category category = Category.机械类;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "spare_part_status", columnDefinition = "ENUM('新好件','修好件','坏件','二级修','返厂修','待调拨','已报废')")
+    private SparePartStatus sparePartStatus = SparePartStatus.新好件;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "spare_part_type", columnDefinition = "ENUM('正常件','在保件','遗留件')")
+    private SparePartType sparePartType = SparePartType.正常件;
+
+    @Column(name = "sn")
+    private String sn;
+
+    @Column(name = "manufacturer")
+    private String manufacturer;
+
+    @Column(name = "unit")
+    private String unit;
+    @Column(name = "status")
+    private String status;
+    public Integer getPartId() {
+        return partId;
     }
 
-    public Spare_part(int part_id, String anquan, String number, String unit, String manufacturer, String category, String part_model, String part_name) {
-        this.part_id = part_id;
-        this.anquan = anquan;
-        this.number = number;
-        this.unit = unit;
-        this.manufacturer = manufacturer;
-        this.category = category;
-        this.part_model = part_model;
-        this.partName = partName;
-    }
-
-    public int getPart_id() {
-        return part_id;
-    }
-
-    public void setPart_id(int part_id) {
-        this.part_id = part_id;
+    public void setPartId(Integer partId) {
+        this.partId = partId;
     }
 
     public String getPartName() {
         return partName;
     }
 
-    public void setPartName(String part_name) {
-        this.partName = part_name;
+    public void setPartName(String partName) {
+        this.partName = partName;
     }
 
-    public String getPart_model() {
-        return part_model;
+    public Warehouse getWarehouse() {
+        return warehouse;
     }
 
-    public void setPart_model(String part_model) {
-        this.part_model = part_model;
+    public void setWarehouse(Warehouse warehouse) {
+        this.warehouse = warehouse;
     }
 
-    public String getCategory() {
+    public String getPartModel() {
+        return partModel;
+    }
+
+    public void setPartModel(String partModel) {
+        this.partModel = partModel;
+    }
+
+    public Category getCategory() {
         return category;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(Category category) {
         this.category = category;
     }
 
-    public String getUnit() {
-        return unit;
+    public SparePartStatus getSparePartStatus() {
+        return sparePartStatus;
     }
 
-    public void setUnit(String unit) {
-        this.unit = unit;
+    public void setSparePartStatus(SparePartStatus sparePartStatus) {
+        this.sparePartStatus = sparePartStatus;
+    }
+
+    public SparePartType getSparePartType() {
+        return sparePartType;
+    }
+
+    public void setSparePartType(SparePartType sparePartType) {
+        this.sparePartType = sparePartType;
+    }
+
+    public String getSn() {
+        return sn;
+    }
+
+    public void setSn(String sn) {
+        this.sn = sn;
     }
 
     public String getManufacturer() {
@@ -81,19 +138,19 @@ public class Spare_part {
         this.manufacturer = manufacturer;
     }
 
-    public String getNumber() {
-        return number;
+    public String getUnit() {
+        return unit;
     }
 
-    public void setNumber(String number) {
-        this.number = number;
+    public void setUnit(String unit) {
+        this.unit = unit;
     }
 
-    public String getAnquan() {
-        return anquan;
+    public String getStatus() {
+        return status;
     }
 
-    public void setAnquan(String anquan) {
-        this.anquan = anquan;
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

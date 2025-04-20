@@ -71,34 +71,12 @@ public class TransferRecordService {
 
         if (fromInventory != null) {
             int currentQuantity = Integer.parseInt(fromInventory.getNumber());
-            int transferQuantity = transfer.getQuantity();
 
-            if (currentQuantity >= transferQuantity) {
-                // 更新原仓库库存
-                fromInventory.setNumber(String.valueOf(currentQuantity - transferQuantity));
-                inventoryRepository.save(fromInventory);
 
-                // 增加目标仓库库存
-                Inventory toInventory = inventoryRepository.findByPartNameAndLocationName(
-                        transfer.getPartName(),
-                        transfer.getToLocationName()
-                );
 
-                if (toInventory != null) {
-                    // 如果目标仓库已有该备件，增加数量
-                    int toCurrentQuantity = Integer.parseInt(toInventory.getNumber());
-                    toInventory.setNumber(String.valueOf(toCurrentQuantity + transferQuantity));
-                } else {
-                    // 如果目标仓库没有该备件，创建新记录
-                    toInventory = new Inventory();
-                    toInventory.setPartName(transfer.getPartName());
-                    toInventory.setLocationName(transfer.getToLocationName());
-                    toInventory.setNumber(String.valueOf(transfer.getQuantity()));
-                    toInventory.setStatus("在库");
-                }
 
-                inventoryRepository.save(toInventory);
-            }
+
+
         }
     }
 }

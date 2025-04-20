@@ -13,15 +13,37 @@
         </el-button>
       </el-col>
       <el-col :span="12" class="flex items-center justify-end">
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
           <el-input
-              v-model="querySparePartName"
-              placeholder="请输入备件名称"
-              style="width: 200px;"
+              v-model="queryParams.sparePartName"
+              placeholder="备件名称"
               clearable
+              style="width: 180px;"
           ></el-input>
-          <el-button @click="handleSearch" type="primary" :icon="Search">查询</el-button>
-          <el-button @click="clearSearch">清空</el-button>
+
+          <el-input
+              v-model="queryParams.sn"
+              placeholder="SN号"
+              clearable
+              style="width: 180px;"
+          ></el-input>
+
+          <el-date-picker
+              v-model="queryParams.dateRange"
+              type="daterange"
+              range-separator="-"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+              style="width: 280px;"
+          />
+
+          <el-button
+              type="primary"
+              @click="handleSearch"
+              :icon="Search"
+          >查询</el-button>
+          <el-button @click="clearSearch">重置</el-button>
         </div>
       </el-col>
     </el-row>
@@ -167,6 +189,18 @@
         </template>
       </el-table-column>
     </el-table>
+    <!-- 在el-table下方添加分页 -->
+    <el-pagination
+        background
+        layout="total, sizes, prev, pager, next"
+        :total="total"
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :page-sizes="[5, 10, 20, 50]"
+        @current-change="handleCurrentChange"
+        @size-change="handleSizeChange"
+        class="mt-4"
+    />
     <!-- 在el-table下方添加 -->
     <el-dialog
         v-model="detailDialogVisible"
@@ -237,9 +271,19 @@ import { Plus, Search } from "@element-plus/icons-vue";
 // 用户相关
 const currentUser = ref({})
 
+// 分页相关
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
+
 // 列表数据
 const dailyList = ref([]);
-const querySparePartName = ref('');
+// 替换原来的 querySparePartName
+const queryParams = reactive({
+  sparePartName: '',
+  sn: '',
+  dateRange: []
+});
 
 // 详情对话框相关
 const detailDialogVisible = ref(false);
@@ -275,20 +319,41 @@ onMounted(async () => {
   currentUser.value = user
   await getDailyList()
 })
+// 分页事件处理
+const handleSizeChange = (newSize) => {
+  pageSize.value = newSize;
+  currentPage.value = 1;
+  getDailyList();
+};
 
+const handleCurrentChange = (newPage) => {
+  currentPage.value = newPage;
+  getDailyList();
+};
 /* ---------------------------- 数据获取 ---------------------------- */
 // 获取入库记录列表
 const getDailyList = async () => {
   try {
-    const params = {};
-    if (querySparePartName.value) {
-      params.spare_part_name = querySparePartName.value;
+    const params = {
+      page: currentPage.value - 1,
+      size: pageSize.value,
+      spare_part_name: queryParams.sparePartName,
+      sn: queryParams.sn
+    };
+
+    // 处理日期范围
+    if (queryParams.dateRange && queryParams.dateRange.length === 2) {
+      params.startTime = queryParams.dateRange[0] + ' 00:00:00';
+      params.endTime = queryParams.dateRange[1] + ' 23:59:59';
     }
+
     const res = await axios.get("http://localhost:8080/api/inbound-records/with-purchase", {
       params,
       withCredentials: true
     });
-    dailyList.value = res.data;
+
+    dailyList.value = res.data.content;
+    total.value = res.data.totalElements;
   } catch (error) {
     ElMessage.error('获取订单列表失败: ' + error.message)
   }
@@ -381,7 +446,9 @@ const submitAdd = async () => {
 // 查询功能
 const handleSearch = () => getDailyList();
 const clearSearch = () => {
-  querySparePartName.value = '';
+  queryParams.sparePartName = '';
+  queryParams.sn = '';
+  queryParams.dateRange = [];
   getDailyList();
 };
 
@@ -401,6 +468,14 @@ const getStatusTag = (status) => {
 };
 </script>
 <style scoped>
+
+.mt-4 {
+  margin-top: 1rem;
+}
+.el-pagination {
+  justify-content: flex-end;
+  padding: 12px 0;
+}
 .dialog-footer {
   text-align: right;
 }

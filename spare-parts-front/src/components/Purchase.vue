@@ -1,117 +1,302 @@
 <template>
   <div>
-    <!-- 操作按钮行 -->
+    <!-- 操作工具栏 -->
     <el-row :gutter="20" class="mb-4">
       <el-col :span="12">
-        <el-button @click="openAddDailyDialog" type="primary" :icon="Plus">新增订单</el-button>
+        <el-button
+            type="primary"
+            :icon="Plus"
+            @click="openAddDailyDialog">
+          新增订单
+        </el-button>
       </el-col>
+
       <el-col :span="12" class="flex items-center justify-end">
         <div class="flex gap-2">
           <el-input
               v-model="querySparePartName"
               placeholder="请输入备件名称"
-              style="width: 200px;"
               clearable
-          ></el-input>
-          <el-button @click="handleSearch" type="primary" :icon="Search">查询</el-button>
-          <el-button @click="clearSearch">清空</el-button>
+              style="width: 200px"/>
+          <el-button
+              type="primary"
+              :icon="Search"
+              @click="handleSearch">
+            查询
+          </el-button>
+          <el-button @click="clearSearch">
+            清空
+          </el-button>
         </div>
       </el-col>
     </el-row>
-    <!-- 订单列表 -->
-    <el-table :data="dailyList" stripe style="width: 100%">
-      <el-table-column prop="order_id" label="采购订单id" />
-      <el-table-column prop="applicant_id" label="申请人id" />
-      <el-table-column prop="station" label="需求车站" />
-      <el-table-column prop="workshop" label="所属工区" />
-      <el-table-column prop="spare_part_name" label="备件名称" />
-      <el-table-column prop="spare_part_model" label="备件型号" />
-      <el-table-column prop="number" label="数量" />
-      <el-table-column prop="status" label="状态" />
-      <el-table-column prop="created_at" label="创建时间">
+
+    <!-- 数据表格 -->
+    <el-table
+        :data="dailyList"
+        stripe
+        style="width: 100%"
+        @row-click="handleRowClick">
+      <el-table-column
+          prop="order_id" label="采购订单id"/>
+      <el-table-column
+          prop="applicant_id" label="申请人id"/>
+      <el-table-column
+          prop="station" label="需求车站"/>
+      <el-table-column
+          prop="workshop" label="所属工区"/>
+      <el-table-column
+          prop="spare_part_name" label="备件名称"/>
+      <el-table-column
+          prop="spare_part_model" label="备件型号"/>
+      <el-table-column
+          prop="number" label="数量"/>
+      <el-table-column
+          prop="status" label="状态">
+        <template #default="{ row }">
+          <el-tag :type="getStatusTagType(row.status)">
+            {{ row.status }}
+          </el-tag>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+          prop="created_at"
+          label="创建时间">
         <template #default="{ row }">
           {{ formatDate(row.created_at) }}
         </template>
       </el-table-column>
-      <el-table-column prop="completed_at" label="完成时间">
+
+      <el-table-column
+          prop="completed_at"
+          label="完成时间">
         <template #default="{ row }">
           {{ formatDate(row.completed_at) }}
         </template>
       </el-table-column>
+
+      <!-- 操作列 -->
+      <el-table-column
+          label="操作"
+          width="180">
+        <template #default="{ row }">
+          <div class="flex gap-2">
+            <el-button
+                size="small"
+                :disabled="!canEditStatus(row.status)"
+                @click.stop="openStatusDialog(row, $event)"> <!-- 添加 $event 参数 -->
+              更新状态
+            </el-button>
+          </div>
+        </template>
+      </el-table-column>
     </el-table>
 
+    <!-- 流程跟踪对话框 -->
+    <el-dialog
+        v-model="flowDialogVisible"
+        title="采购流程跟踪"
+        width="800px">
+      <div class="flow-container">
+        <el-steps
+            :active="currentStep"
+            align-center
+            finish-status="success">
+          <el-step
+              v-for="(step, index) in STATUS_FLOW"
+              :key="index"
+              :title="step"
+              :status="getStepStatus(index)">
+            <template #description>
+              <!-- 修改判断条件为具体时间值 -->
+              <div v-if="historyMap[step] && historyMap[step] !== 'null'">
+                {{ formatDate(historyMap[step]) }}
+              </div>
+              <div v-else class="text-gray-400">
+                待完成
+              </div>
+            </template>
+          </el-step>
+        </el-steps>
+      </div>
+    </el-dialog>
+
+    <!-- 状态更新对话框 -->
+    <el-dialog
+        v-model="statusDialogVisible"
+        title="更新采购状态">
+      <el-form>
+        <el-form-item label="当前状态">
+          <el-tag :type="getStatusTagType(currentOrder.status)">
+            {{ currentOrder.status }}
+          </el-tag>
+        </el-form-item>
+
+        <el-form-item label="新状态">
+          <el-select v-model="selectedStatus">
+            <el-option
+                v-for="status in nextStatusOptions"
+                :key="status"
+                :label="status"
+                :value="status"/>
+          </el-select>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="statusDialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+            type="primary"
+            @click="updateOrderStatus">
+          确认
+        </el-button>
+      </template>
+    </el-dialog>
+
     <!-- 新增订单对话框 -->
-    <el-dialog v-model="addDailyDialogVisible" title="新增订单" @close="clearAddDailyForm">
-      <!-- 修改对话框中的表单定义 -->
+    <el-dialog
+        v-model="addDailyDialogVisible"
+        title="新增订单"
+        @close="clearAddDailyForm">
       <el-form
+          ref="addDailyFormRef"
           :model="addDailyForm"
           :rules="addDailyFormRules"
-      ref="addDailyFormRef"
-      label-width="100px"
-      >
-      <el-form-item label="需求车站" prop="station">  <!-- 添加prop属性 -->
-        <el-input
-            v-model="addDailyForm.station"
-            placeholder="请输入需求车站"
-            clearable
-        ></el-input>
-      </el-form-item>
+          label-width="100px">
+        <el-form-item
+            label="需求车站"
+            prop="station">
+          <el-input
+              v-model="addDailyForm.station"
+              placeholder="请输入需求车站"
+              clearable/>
+        </el-form-item>
 
-      <el-form-item label="所属工区" prop="workshop">
-        <el-input
-            v-model="addDailyForm.workshop"
-            placeholder="请输入所属工区"
-            clearable
-        ></el-input>
-      </el-form-item>
+        <el-form-item
+            label="所属工区"
+            prop="workshop">
+          <el-input
+              v-model="addDailyForm.workshop"
+              placeholder="请输入所属工区"
+              clearable/>
+        </el-form-item>
 
-      <el-form-item label="备件名称" prop="spare_part_name">
-        <el-input
-            v-model="addDailyForm.spare_part_name"
-            placeholder="请输入备件名称"
-            clearable
-        ></el-input>
-      </el-form-item>
+        <el-form-item
+            label="备件名称"
+            prop="spare_part_name">
+          <el-input
+              v-model="addDailyForm.spare_part_name"
+              placeholder="请输入备件名称"
+              clearable/>
+        </el-form-item>
 
-      <el-form-item label="备件型号" prop="spare_part_model">
-        <el-input
-            v-model="addDailyForm.spare_part_model"
-            placeholder="请输入备件型号"
-            clearable
-        ></el-input>
-      </el-form-item>
-        <el-form-item label="数量" prop="number">
+        <el-form-item
+            label="备件型号"
+            prop="spare_part_model">
+          <el-input
+              v-model="addDailyForm.spare_part_model"
+              placeholder="请输入备件型号"
+              clearable/>
+        </el-form-item>
+
+        <el-form-item
+            label="数量"
+            prop="number">
           <el-input
               v-model="addDailyForm.number"
               placeholder="请输入备件数量"
-              clearable
-          ></el-input>
+              clearable/>
         </el-form-item>
       </el-form>
-      <!--foot-->
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="addDailyDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitAddDaily">确定</el-button>
-      </div>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="addDailyDialogVisible = false">
+            取消
+          </el-button>
+          <el-button
+              type="primary"
+              @click="submitAddDaily">
+            确定
+          </el-button>
+        </div>
+      </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue';
-import {ElMessage} from "element-plus";
-import axios from "axios";
-import router from "@/router.js";
-import {Plus, Search} from "@element-plus/icons-vue";
-// 新增查询条件变量
-const querySparePartName = ref('');
+import { computed, onMounted, ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Plus, Search } from '@element-plus/icons-vue'
+import axios from 'axios'
+import router from '@/router.js'
 
+/* 常量定义 */
+const API_BASE = 'http://localhost:8080/purchase_order'
+const STATUS_FLOW = [
+  '待上会',     // 初始状态
+  '待招标',     // 第一步
+  '采购中',     // 第二步
+  '待发货',     // 第三步
+  '待收货',     // 第四步
+  '已完成'      // 最终状态
+]
+
+/* 响应式状态 */
+const querySparePartName = ref('')
 const currentUser = ref({})
-const dailyList = ref([]); // 订单数据列表
-const addDailyDialogVisible = ref(false); // 新增订单对话框
-// 在script setup顶部添加模板引用声明
-const addDailyFormRef = ref(null);
+const dailyList = ref([])
+const statusHistory = ref([])
+const handleRowClick = (row) => {
+  showFlowDialog(row)
+}
+// 对话框相关
+const addDailyDialogVisible = ref(false)
+const statusDialogVisible = ref(false)
+const flowDialogVisible = ref(false)
 
+// 表单相关
+const addDailyForm = ref({
+  station: '',
+  workshop: '',
+  spare_part_name: '',
+  spare_part_model: '',
+  number: '',
+  status: '待上会'
+})
+
+const addDailyFormRef = ref(null)
+const currentOrder = ref({})
+const currentFlowOrder = ref(null)
+const selectedStatus = ref('')
+
+// 修正后的nextStatusOptions计算属性
+const nextStatusOptions = computed(() => {
+  const currentIndex = STATUS_FLOW.indexOf(currentOrder.value.status);
+  return currentIndex >= 0 && currentIndex < STATUS_FLOW.length - 1
+      ? [STATUS_FLOW[currentIndex + 1]]
+      : [];
+});
+
+
+const historyMap = computed(() =>
+    statusHistory.value.reduce((map, item) => {
+      map[item.status] = item.changedAt
+      return map
+    }, {})
+)
+// 修正后的currentStep计算属性
+const currentStep = computed(() => {
+  const status = currentFlowOrder.value?.status;
+  const index = STATUS_FLOW.indexOf(status);
+  return status === '已完成' ? STATUS_FLOW.length : index;
+});
+
+/* 生命周期钩子 */
 onMounted(async () => {
   const user = JSON.parse(sessionStorage.getItem('user'))
   if (!user) {
@@ -120,81 +305,86 @@ onMounted(async () => {
     return
   }
   currentUser.value = user
-  await getDailyList()
+  await fetchOrders()
 })
 
+/* 通用方法 */
+const formatDate = (timestamp) => {
+  if (!timestamp || timestamp === 'null') return '-';
+  const date = new Date(timestamp);
+  return isNaN(date) ? '-' : date.toLocaleString();
+}
 
-// 新增订单表单
-const addDailyForm = ref({
+const getStatusTagType = (status) =>
+    ({
+      '待上会': 'info',
+      '待招标': '',
+      '采购中': 'warning',
+      '待发货': 'primary',
+      '待收货': 'success',
+      '已完成': 'success'
+    }[status] || '')
 
-  station: '',
-  workshop: '',
-  spare_part_name: '',
-  spare_part_model: '',
-  number:'',
-  status: '待审核',      // 状态（不需要用户输入，直接设为初始值）
-
-});
-
-
-// 打开新增订单对话框
-const openAddDailyDialog = () => {
-  addDailyDialogVisible.value = true;
-};
-
-// 清空新增订单表单
-const clearAddDailyForm = () => {
-  addDailyFormRef.value?.resetFields(); // 清除验证状态
-  addDailyForm.value = {
-    ...addDailyForm.value, // 保留已有值
-    station: '',
-    workshop: '',
-    spare_part_name: '',
-    spare_part_model: '',
-    number:'',
-  };
-};
-
-
-// 新增订单表单验证规则
-const addDailyFormRules = ref({
-  station: [
-    { required: true, message: '请输入需求车站', trigger: 'blur' }
-  ],
-  workshop: [
-    { required: true, message: '请输入所属工区', trigger: 'blur' }
-  ],
-  spare_part_name: [
-    { required: true, message: '请输入备件名称', trigger: 'blur' }
-  ],
-  spare_part_model: [
-    { required: true, message: '请输入备件型号', trigger: 'blur' }
-  ],
-  number: [
-    { required: true, message: '请输入备件数量', trigger: 'blur' }
-  ]
-});
-// 修改获取订单列表方法，支持参数
-const getDailyList = async () => {
+/* 订单列表相关 */
+const fetchOrders = async () => {
   try {
-    const params = {};
-    if (querySparePartName.value) {
-      params.spare_part_name = querySparePartName.value;
+    const params = {
+      spare_part_name: querySparePartName.value
     }
-    const res = await axios.get("http://localhost:8080/purchase_order/a", {
+
+    const { data } = await axios.get(`${API_BASE}/a`, {
       params,
       withCredentials: true
-    });
-    dailyList.value = res.data;
+    })
+
+    dailyList.value = data
   } catch (error) {
-    ElMessage.error('获取订单列表失败: ' + error.message)
+    handleError('获取订单列表失败', error)
   }
-};
-// 修改后的提交方法
+}
+
+const handleSearch = () => fetchOrders()
+const clearSearch = () => {
+  querySparePartName.value = ''
+  fetchOrders()
+}
+
+/* 订单状态相关 */
+const canEditStatus = (status) =>
+    !['已完成', '已入库'].includes(status) &&
+    currentUser.value.role === '库管员'
+
+const updateOrderStatus = async () => {
+  try {
+    await axios.put(
+        `${API_BASE}/${currentOrder.value.order_id}/status`,
+        {
+          newStatus: selectedStatus.value,
+          operatorId: currentUser.value.user_id
+        },
+        { withCredentials: true }
+    )
+
+    await fetchOrders()
+    statusDialogVisible.value = false
+    ElMessage.success('状态更新成功')
+  } catch (error) {
+    handleError('更新失败', error)
+  }
+}
+
+/* 订单创建相关 */
+const addDailyFormRules = {
+  station: { required: true, message: '请输入需求车站', trigger: 'blur' },
+  workshop: { required: true, message: '请输入所属工区', trigger: 'blur' },
+  spare_part_name: { required: true, message: '请输入备件名称', trigger: 'blur' },
+  spare_part_model: { required: true, message: '请输入备件型号', trigger: 'blur' },
+  number: { required: true, message: '请输入备件数量', trigger: 'blur' }
+}
+
 const submitAddDaily = async () => {
   try {
-    // 先进行表单验证
-    await addDailyFormRef.value.validate();
+    await addDailyFormRef.value.validate()
 
     const formData = {
       ...addDailyForm.value,
@@ -202,46 +392,132 @@ const submitAddDaily = async () => {
       created_at: new Date().toISOString()
     }
 
-    await axios.post('http://localhost:8080/purchase_order', formData, {
+    await axios.post(API_BASE, formData, {
       withCredentials: true
+    })
+
+    await fetchOrders()
+    addDailyDialogVisible.value = false
+    ElMessage.success('采购订单新增成功！')
+  } catch (error) {
+    if (error.name !== 'ElFormValidateError') {
+      handleError('提交失败', error)
+    }
+  }
+}
+
+/* 流程跟踪相关 */
+const getStepStatus = (index) => {
+  const status = currentFlowOrder.value?.status;
+  // 如果当前状态是已完成，所有步骤标记为成功
+  if (status === '已完成') {
+    return 'success';
+  }
+  const currentIndex = STATUS_FLOW.indexOf(status);
+  if (currentIndex === -1) return 'wait'; // 状态不存在于流程中
+  return index < currentIndex ? 'success'
+      : index === currentIndex ? 'process'
+          : 'wait';
+};
+
+const showFlowDialog = async (order) => {
+  try {
+    currentFlowOrder.value = order;
+    const { data } = await axios.get(
+        `${API_BASE}/${order.order_id}/histories`
+    );
+
+    // 创建完整状态节点骨架
+    const statusNodes = STATUS_FLOW.reduce((acc, status) => {
+      acc[status] = {
+        status,
+        changedAt: null,
+        operator: null
+      };
+      return acc;
+    }, {});
+
+    // 合并API数据
+    [...data, {
+      status: '待上会',
+      changedAt: order.created_at,
+      operator: order.applicant_id
+    }].forEach(item => {
+      if (statusNodes[item.status]) {
+        statusNodes[item.status] = {
+          ...item,
+          changedAt: item.changedAt || order.completed_at
+        };
+      }
     });
 
-    await getDailyList();
-    ElMessage.success('采购订单新增成功！');
-    addDailyDialogVisible.value = false;
+    // 转换排序后的数组
+    statusHistory.value = STATUS_FLOW
+        .map(status => statusNodes[status])
+        .filter(item => item.changedAt); // 只显示有记录的状态
+
+    flowDialogVisible.value = true;
   } catch (error) {
-    if (error.name === 'ElFormValidateError') { // 表单验证失败的特殊处理
-      console.log('表单校验未通过');
-    } else {
-      ElMessage.error('提交失败: ' + (error.response?.data?.message || error.message));
-    }
+    handleError('获取流程历史失败', error);
   }
 };
 
+/* 辅助方法 */
+const handleError = (message, error) => {
+  const errorMsg = error.response?.data?.message || error.message
+  ElMessage.error(`${message}: ${errorMsg}`)
+}
 
-// 查询按钮事件
-const handleSearch = () => {
-  getDailyList();
-};
+/* UI交互方法 */
+const openAddDailyDialog = () =>
+    addDailyDialogVisible.value = true
 
-// 清空按钮事件
-const clearSearch = () => {
-  querySparePartName.value = '';
-  getDailyList();
-};
+const clearAddDailyForm = () => {
+  addDailyFormRef.value?.resetFields()
+  addDailyForm.value = {
+    station: '',
+    workshop: '',
+    spare_part_name: '',
+    spare_part_model: '',
+    number: '',
+    status: '待上会'
+  }
+}
 
-
-// 显示数据时格式化时间
-const formatDate = (timestamp) => {
-  if (!timestamp) return '-';
-  return new Date(timestamp).toLocaleString();
-};
-
-
-
+const openStatusDialog = (row, event) => {
+  // 确保 event 存在再调用方法
+  event?.stopPropagation()
+  currentOrder.value = row
+  selectedStatus.value = ''
+  statusDialogVisible.value = true
+}
 </script>
 <style scoped>
 .dialog-footer {
   text-align: right;
+}
+
+.flow-container {
+  padding: 20px 40px;
+}
+
+.timestamp {
+  font-size: 12px;
+  color: #666;
+  margin-top: 8px;
+}
+
+:deep(.el-step__head.is-process) {
+  color: #409EFF;
+  border-color: #409EFF;
+}
+
+:deep(.el-step__title.is-process) {
+  color: #409EFF;
+  font-weight: 500;
+}
+
+:deep(.el-step__description.is-process) {
+  color: #666;
 }
 </style>

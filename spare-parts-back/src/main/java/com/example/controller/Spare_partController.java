@@ -42,7 +42,7 @@ public class Spare_partController {
         try {
             // 检查ID是否存在
             if (spare_partRepository.existsById(part_id)) {
-                spare_part.setPart_id(part_id);
+                spare_part.setPartId(part_id);
                 spare_partRepository.save(spare_part);
                 return 1; // 更新成功返回1
             } else {
