@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Integer>, JpaSpecificationExecutor<Inventory> {
-    // 使用标准命名约定
+    // 找到对应库存
     Inventory findByPartNameAndLocationName(String partName, String locationName);
+
 }

@@ -16,7 +16,13 @@ public class Purchase_order {
     String number;
     String created_at;
     String completed_at;
-
+    public int getQuantityAsInt() {
+        try {
+            return Integer.parseInt(this.number.trim());
+        } catch (Exception e) {
+            return 0; // 或抛出异常
+        }
+    }
     public int getOrder_id() {
         return order_id;
     }

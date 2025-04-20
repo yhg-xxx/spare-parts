@@ -20,6 +20,12 @@ public class Purchase_orderController {
     public Purchase_order createPurchase_order(@RequestBody Purchase_order purchase_order) {
         return purchase_orderRepository.save(purchase_order);
     }
+
+    //获取待入库的采购单
+    @GetMapping("/purchase_order/s")
+    public List<Purchase_order> getPendingPurchaseOrders() {
+        return purchase_orderRepository.findByStatus("待入库");
+    }
     @GetMapping("/purchase_order/a")
     public List<Purchase_order> getPurchaseOrders(@RequestParam(required = false) String spare_part_name) {
         return purchaseOrderService.findBySparePartName(spare_part_name);
