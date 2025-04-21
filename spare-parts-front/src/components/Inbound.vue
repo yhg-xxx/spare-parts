@@ -335,16 +335,20 @@ const handleCurrentChange = (newPage) => {
 const getDailyList = async () => {
   try {
     const params = {
-      page: currentPage.value - 1,
+      page: currentPage.value - 1, // 修正页码（Element Plus从1开始，Spring从0开始）
       size: pageSize.value,
-      spare_part_name: queryParams.sparePartName,
       sn: queryParams.sn
     };
 
-    // 处理日期范围
-    if (queryParams.dateRange && queryParams.dateRange.length === 2) {
-      params.startTime = queryParams.dateRange[0] + ' 00:00:00';
-      params.endTime = queryParams.dateRange[1] + ' 23:59:59';
+    // 处理备件名称参数
+    if (queryParams.sparePartName) {
+      params.sparePartName = queryParams.sparePartName;
+    }
+
+    // 处理日期范围（保持与后端格式一致）
+    if (queryParams.dateRange?.length === 2) {
+      params.startTime = queryParams.dateRange[0];
+      params.endTime = queryParams.dateRange[1];
     }
 
     const res = await axios.get("http://localhost:8080/api/inbound-records/with-purchase", {
@@ -355,10 +359,9 @@ const getDailyList = async () => {
     dailyList.value = res.data.content;
     total.value = res.data.totalElements;
   } catch (error) {
-    ElMessage.error('获取订单列表失败: ' + error.message)
+    ElMessage.error('获取列表失败: ' + error.message)
   }
 };
-
 /* ---------------------------- 界面交互 ---------------------------- */
 // 行点击显示详情
 const handleRowClick = async (row) => {

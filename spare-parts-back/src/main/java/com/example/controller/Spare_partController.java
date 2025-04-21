@@ -1,6 +1,7 @@
 package com.example.controller;
 
 import com.example.dao.Spare_partRepository;
+import com.example.dto.SparePartWithWarehouseDTO;
 import com.example.entity.Spare_part;
 import com.example.service.SparePartService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,9 +9,11 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -22,18 +25,18 @@ public class Spare_partController {
     public Spare_part createSpare_part(@RequestBody Spare_part spare_part) {
         return spare_partRepository.save(spare_part);
     }
-    //根据part_id删除
-    @DeleteMapping("/spare_part/{part_id}")
-    public Integer deleteSpare_part(@PathVariable("part_id") int part_id) {
+    // 修改后的删除方法
+    @DeleteMapping("/spare_part/{partId}")
+    public ResponseEntity<?> deleteSpare_part(@PathVariable("partId") int partId) {
         try {
-            spare_partRepository.deleteById(part_id);
-            return 1; // 删除成功返回1
+            spare_partRepository.deleteById(partId);
+            return ResponseEntity.ok().body(Collections.singletonMap("success", true));
         } catch (EmptyResultDataAccessException e) {
-            // 捕获删除不存在的记录异常
-            return 0; // 删除失败返回0
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "备件不存在"));
         } catch (Exception e) {
-            // 其他异常（如数据库连接失败）
-            return 0;
+            return ResponseEntity.internalServerError()
+                    .body(Collections.singletonMap("error", "服务器错误"));
         }
     }
     //根据order_id修改
@@ -56,20 +59,15 @@ public class Spare_partController {
     @Autowired
     private SparePartService sparePartService;
 
+    // SparePartController.java
     @GetMapping("/spare_part")
-    public ResponseEntity<Page<Spare_part>> getSpareParts(
+    public ResponseEntity<Page<SparePartWithWarehouseDTO>> getSpareParts(
             @RequestParam(required = false) String partName,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Spare_part> result = sparePartService.searchParts(partName, pageable);
-        return ResponseEntity.ok(result);
-    }
-    //获取所有
-    @GetMapping("/spare_part/x")
-    public List<Spare_part> getAllSpare_parts() {
-        return spare_partRepository.findAll();
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(sparePartService.searchParts(partName, pageable));
     }
 
 }

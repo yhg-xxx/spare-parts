@@ -46,7 +46,7 @@ public class InboundRecordController {
 
     @GetMapping("/with-purchase")
     public Page<InboundWithPurchaseDTO> getAllWithPurchase(
-            @RequestParam(required = false) String spare_part_name,
+            @RequestParam(required = false) String sparePartName,
             @RequestParam(required = false) String sn,
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime,
@@ -54,7 +54,7 @@ public class InboundRecordController {
             @RequestParam(defaultValue = "10") int size) {
 
         return service.findAllWithPurchaseOrders(
-                spare_part_name,
+                sparePartName,
                 sn,
                 startTime,
                 endTime,

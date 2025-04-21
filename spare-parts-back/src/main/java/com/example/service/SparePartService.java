@@ -1,6 +1,7 @@
 package com.example.service;
 
 import com.example.dao.Spare_partRepository;
+import com.example.dto.SparePartWithWarehouseDTO;
 import com.example.entity.Spare_part;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -13,7 +14,8 @@ public class SparePartService {
     @Autowired
     private Spare_partRepository sparePartRepository;
 
-    public Page<Spare_part> searchParts(String partName, Pageable pageable) {
-        return sparePartRepository.findByPartNameContaining(partName, pageable);
+    // SparePartService.java
+    public Page<SparePartWithWarehouseDTO> searchParts(String partName, Pageable pageable) {
+        return sparePartRepository.searchWithWarehouse(partName, pageable);
     }
 }

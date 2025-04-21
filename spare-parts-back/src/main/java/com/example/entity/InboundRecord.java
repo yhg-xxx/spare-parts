@@ -29,6 +29,10 @@ public class InboundRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "inbound_id")
     private Integer inboundId;
+    // 新增关联字段
+    @ManyToOne
+    @JoinColumn(name = "order_id", insertable = false, updatable = false) // 映射到数据库外键列 order_id
+    private Purchase_order purchaseOrder;
 
     @Column(name = "order_id", nullable = false)
     private Integer orderId;
@@ -92,6 +96,14 @@ public class InboundRecord {
     }
     // 默认构造函数
     public InboundRecord() {
+    }
+
+    public Purchase_order getPurchaseOrder() {
+        return purchaseOrder;
+    }
+
+    public void setPurchaseOrder(Purchase_order purchaseOrder) {
+        this.purchaseOrder = purchaseOrder;
     }
 
     public Integer getInboundId() {

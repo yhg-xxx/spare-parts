@@ -10,4 +10,7 @@ import java.util.List;
 @Repository
 public interface Purchase_orderRepository extends JpaRepository<Purchase_order, Integer> , JpaSpecificationExecutor<Purchase_order> {
     List<Purchase_order> findByStatus(String status);
+
+
 }
+

@@ -4,14 +4,7 @@ import jakarta.persistence.*;
 
 
 @Entity
-@Table(name = "spare_part",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "idx_part_name_unique", columnNames = {"part_name"})
-        },
-        indexes = {
-                @Index(name = "part_name", columnList = "part_name"),
-                @Index(name = "qqq-o", columnList = "location_id")
-        })
+@Table(name = "spare_part")
 
 public class Spare_part {
 
@@ -34,12 +27,12 @@ public class Spare_part {
     @Column(name = "part_id", nullable = false)
     private Integer partId;
 
-    @Column(name = "part_name", nullable = false, unique = true)
+    @Column(name = "part_name", nullable = false)
     private String partName;
 
-    @ManyToOne
+
     @JoinColumn(name = "location_id", foreignKey = @ForeignKey(name = "qqq-o"))
-    private Warehouse warehouse;
+    private Integer locationId;
 
     @Column(name = "part_model")
     private String partModel;
@@ -82,12 +75,12 @@ public class Spare_part {
         this.partName = partName;
     }
 
-    public Warehouse getWarehouse() {
-        return warehouse;
+    public Integer getLocationId() {
+        return locationId;
     }
 
-    public void setWarehouse(Warehouse warehouse) {
-        this.warehouse = warehouse;
+    public void setLocationId(Integer locationId) {
+        this.locationId = locationId;
     }
 
     public String getPartModel() {

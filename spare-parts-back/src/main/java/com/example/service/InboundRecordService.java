@@ -1,47 +1,43 @@
 package com.example.service;
 
-import com.example.dao.InboundRecordRepository;
-import com.example.dao.InventoryRepository;
-import com.example.dao.Purchase_orderRepository;
-import com.example.dao.WarehouseRepository;
+import com.example.config.BusinessException;
+import com.example.dao.*;
 import com.example.dto.InboundCreateRequest;
 import com.example.dto.InboundWithPurchaseDTO;
-import com.example.entity.InboundRecord;
-import com.example.entity.Inventory;
-import com.example.entity.Purchase_order;
-import com.example.entity.Warehouse;
+import com.example.entity.*;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
+import java.util.ArrayList;
+
 import java.util.List;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class InboundRecordService {
-    private final InventoryRepository inventoryRepository;
-    private final WarehouseRepository warehouseRepository;
+    private final Spare_partRepository sparePartRepository;
     private final InboundRecordRepository repository;
     private final Purchase_orderRepository purchaseOrderRepository; // 新增
     public InboundRecordService(InboundRecordRepository repository,
-    Purchase_orderRepository purchaseOrderRepository,InventoryRepository inventoryRepository,
-                                WarehouseRepository warehouseRepository) {
+    Purchase_orderRepository purchaseOrderRepository,Spare_partRepository sparePartRepository) {
         this.repository = repository;
         this.purchaseOrderRepository = purchaseOrderRepository;
-        this.inventoryRepository = inventoryRepository;
-        this.warehouseRepository = warehouseRepository;
+        this.sparePartRepository = sparePartRepository;
     }
     public InboundWithPurchaseDTO findWithPurchaseOrderById(Integer inboundId) {
         InboundRecord inbound = repository.findById(inboundId)
@@ -62,46 +58,51 @@ public class InboundRecordService {
             int page,
             int size) {
 
+        // 创建分页请求（注意Spring Data页码从0开始）
         Pageable pageable = PageRequest.of(page, size);
-        Page<InboundRecord> inboundPage = repository.findAll(pageable);
 
+        // 构建查询条件
+        Specification<InboundRecord> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // SN号过滤
+            if (sn != null && !sn.isEmpty()) {
+                predicates.add(cb.like(root.get("sn"), "%" + sn + "%"));
+            }
+
+            // 时间范围过滤
+            if (startTime != null) {
+                LocalDateTime start = parseLocalDateTime(startTime + " 00:00:00");
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), start));
+            }
+            if (endTime != null) {
+                LocalDateTime end = parseLocalDateTime(endTime + " 23:59:59");
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), end));
+            }
+
+            // 关联采购单的备件名称过滤
+            if (sparePartName != null && !sparePartName.isEmpty()) {
+                Join<InboundRecord, Purchase_order> orderJoin = root.join("purchaseOrder"); // 使用实体关联属性名
+                predicates.add(cb.like(orderJoin.get("spare_part_name"), "%" + sparePartName + "%"));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        // 执行分页查询
+        Page<InboundRecord> inboundPage = repository.findAll(spec, pageable);
+
+        // 转换DTO（保持原有逻辑）
         List<InboundWithPurchaseDTO> content = inboundPage.getContent().stream()
                 .map(inbound -> {
                     Purchase_order order = purchaseOrderRepository.findById(inbound.getOrderId())
                             .orElse(new Purchase_order());
                     return new InboundWithPurchaseDTO(inbound, order);
                 })
-                .filter(dto -> {
-                    boolean match = true;
-
-                    // 备件名称过滤
-                    if (sparePartName != null && !sparePartName.isEmpty()) {
-                        match = dto.getPurchaseOrder().getSpare_part_name().contains(sparePartName);
-                    }
-
-                    // SN号过滤
-                    if (match && sn != null && !sn.isEmpty()) {
-                        match = dto.getInboundRecord().getSn().contains(sn);
-                    }
-
-                    // 时间范围过滤
-                    if (match && startTime != null) {
-                        LocalDateTime start = parseLocalDateTime(startTime);
-                        match = dto.getInboundRecord().getCreatedAt().isAfter(start);
-                    }
-
-                    if (match && endTime != null) {
-                        LocalDateTime end = parseLocalDateTime(endTime);
-                        match = dto.getInboundRecord().getCreatedAt().isBefore(end);
-                    }
-
-                    return match;
-                })
                 .collect(Collectors.toList());
 
         return new PageImpl<>(content, pageable, inboundPage.getTotalElements());
     }
-
     // 新的日期解析方法
     private LocalDateTime parseLocalDateTime(String dateString) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -142,6 +143,7 @@ public class InboundRecordService {
         }
 
         List<InboundRecord> records = requests.stream().map(request -> {
+            syncSparePart(po, request);
             InboundRecord record = new InboundRecord();
             // 设置基础字段
             record.setOrderId(orderId);
@@ -180,28 +182,52 @@ public class InboundRecordService {
         // 更新采购订单状态和完成时间
         po.setStatus("已入库");
         purchaseOrderRepository.save(po);
-        updateInventory(po, savedRecords.get(0).getLocationId(), purchaseQty);
         return savedRecords;
     }
-    private void updateInventory(Purchase_order purchaseOrder, Integer locationId, int inboundQuantity) {
-        // 获取仓库名称
-        Warehouse warehouse = warehouseRepository.findById(locationId)
-                .orElseThrow(() -> new ResourceNotFoundException("仓库信息不存在: " + locationId));
 
-        // 获取备件名称
-        String partName = purchaseOrder.getSpare_part_name();
-        String locationName = warehouse.getLocation_name();
+    private void syncSparePart(Purchase_order purchaseOrder, InboundCreateRequest request) {
+        // 1. 校验SN号必填
+        if (request.getSn() == null || request.getSn().isBlank()) {
+            throw new IllegalArgumentException("SN号不能为空");
+        }
 
-        // 查询库存记录
-        Inventory inventory = inventoryRepository.findByPartNameAndLocationName(partName, locationName);
+        // 2. 根据SN号查询备件
+        Optional<Spare_part> existing = sparePartRepository.findBySn(request.getSn());
 
+        // 3. 存在则更新，不存在则创建
+        Spare_part sparePart = existing.orElseGet(Spare_part::new);
 
-        // 更新数量（使用实际入库数量）
-        int currentQuantity = Integer.parseInt(inventory.getNumber());
-        inventory.setNumber(String.valueOf(currentQuantity + inboundQuantity)); // 关键修改点
-        inventoryRepository.save(inventory);
+        // 4. 设置/更新字段（示例字段映射）
+        sparePart.setPartName(purchaseOrder.getSpare_part_name());
+        sparePart.setPartModel(purchaseOrder.getSpare_part_model());
+        sparePart.setSn(request.getSn()); // 确保SN号唯一
+        sparePart.setCategory(convertCategory(request.getSparePartCategory()));
+        sparePart.setSparePartStatus(convertStatus(request.getSparePartStatus()));
+        sparePart.setLocationId(request.getLocationId());
+        sparePart.setManufacturer(request.getManufacturer());
+        sparePart.setUnit(request.getUnit());
+        sparePart.setStatus("在库");
+
+        // 5. 保存备件
+        sparePartRepository.save(sparePart);
     }
 
+    // 添加枚举转换保护方法
+    private Spare_part.Category convertCategory(String category) {
+        try {
+            return Spare_part.Category.valueOf(category);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("无效备件分类: " + category);
+        }
+    }
+
+    private Spare_part.SparePartStatus convertStatus(String status) {
+        try {
+            return Spare_part.SparePartStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("无效备件状态: " + status);
+        }
+    }
 
     // 自定义异常类作为静态内部类
     public static class ResourceNotFoundException extends RuntimeException {
