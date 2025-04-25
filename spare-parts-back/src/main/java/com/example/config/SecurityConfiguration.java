@@ -27,12 +27,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/inventory/**").permitAll()
                         .requestMatchers("/spare_part/**").permitAll()
-                        .requestMatchers("/api/stockouts").permitAll()
-                        .requestMatchers("/api/stockouts/**/status").permitAll()
-                        .requestMatchers("/api/usage-requests").permitAll()
-                        .requestMatchers("/api/usage-requests/**/status").permitAll()
-                        .requestMatchers("/api/usage-requests/**/approve").permitAll()
-                        .requestMatchers("/api/usage-requests/**/reject").permitAll()
+
                 )
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))

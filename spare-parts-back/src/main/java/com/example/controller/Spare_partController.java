@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.dao.Spare_partRepository;
 import com.example.dto.SparePartWithWarehouseDTO;
 import com.example.entity.Spare_part;
+import com.example.entity.Warehouse;
 import com.example.service.SparePartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -68,6 +69,12 @@ public class Spare_partController {
 
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(sparePartService.searchParts(partName, pageable));
+    }
+
+    //获取所有
+    @GetMapping("/spare_part/x")
+    public List<Spare_part> getAllspart() {
+        return spare_partRepository.findAll();
     }
 
 }
