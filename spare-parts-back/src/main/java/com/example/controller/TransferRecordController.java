@@ -34,13 +34,13 @@ public class TransferRecordController {
         return transferRecordService.createBatchTransfers(transfers);
     }
 
-    @PutMapping("/{id}/approve")
-    public TransferRecord approveTransfer(@PathVariable int id) {
-        return transferRecordService.updateStatus(id, "已通过");
+    @PutMapping("/{transferId}/approve")
+    public TransferRecord approveTransfer(@PathVariable int transferId) {
+        return transferRecordService.updateStatus(transferId, "已通过");
     }
 
-    @PutMapping("/{id}/reject")
-    public TransferRecord rejectTransfer(@PathVariable int id) {
-        return transferRecordService.updateStatus(id, "已驳回");
+    @PutMapping("/{transferId}/reject")
+    public TransferRecord rejectTransfer(@PathVariable int transferId) {
+        return transferRecordService.updateStatus(transferId, "已驳回");
     }
 }

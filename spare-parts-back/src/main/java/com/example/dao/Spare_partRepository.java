@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -25,7 +26,7 @@ public interface Spare_partRepository extends JpaRepository<Spare_part, Integer>
             s.manufacturer as manufacturer,
             s.unit as unit,
             s.locationId as locationId,
-            w.location_name as locationName,
+            w.locationName as locationName,
             w.location_code as locationCode
         FROM Spare_part s
         LEFT JOIN Warehouse w ON s.locationId = w.location_id
@@ -36,4 +37,9 @@ public interface Spare_partRepository extends JpaRepository<Spare_part, Integer>
             Pageable pageable
     );
     Optional<Spare_part> findBySn(String sn);
+    @Query("SELECT s.sn FROM Spare_part s WHERE s.locationId = :locationId AND s.partName = :partName")
+    List<String> findSnByLocationIdAndPartName(
+            @Param("locationId") Integer locationId,
+            @Param("partName") String partName);
+
 }

@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "usagerequest", schema = "your_schema_name",
+@Table(name = "usagerequest", schema = "spare parts",
         indexes = {
                 @Index(name = "ddd-p", columnList = "location_id") // 显式声明外键索引
         })
@@ -26,7 +26,7 @@ public class UsageRequest implements Serializable {
     @Column(name = "applicant_id", columnDefinition = "INT COMMENT '申请人'")
     private Integer applicantId;
 
-    @Column(name = "part_name", columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '备件名称'")
+    @Column(name = "part_name", columnDefinition = "VARCHAR(255) COMMENT '备件名称'")
     private String partName;
 
     @Column(name = "part_model", columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '备件型号'")

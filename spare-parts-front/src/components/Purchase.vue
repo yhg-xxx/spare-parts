@@ -108,10 +108,18 @@
               :key="index"
               :title="step"
               :status="getStepStatus(index)">
+            <!-- 修改el-step的描述部分 -->
             <template #description>
-              <!-- 修改判断条件为具体时间值 -->
-              <div v-if="historyMap[step] && historyMap[step] !== 'null'">
-                {{ formatDate(historyMap[step]) }}
+              <div v-if="historyMap[step] && historyMap[step].changedAt">
+                <div>{{ formatDate(historyMap[step].changedAt) }}</div>
+                <!-- 待上会状态显示申请人 -->
+                <div v-if="step === '待上会'" class="operator-text">
+                  申请人：{{ currentUser.name }}
+                </div>
+                <!-- 其他状态显示操作人 -->
+                <div v-else-if="historyMap[step].operator" class="operator-text">
+                  操作人：{{ historyMap[step].operator }}
+                </div>
               </div>
               <div v-else class="text-gray-400">
                 待完成
@@ -285,7 +293,10 @@ const nextStatusOptions = computed(() => {
 
 const historyMap = computed(() =>
     statusHistory.value.reduce((map, item) => {
-      map[item.status] = item.changedAt
+      map[item.status] = {
+        changedAt: item.changedAt,
+        operator: item.operator
+      }
       return map
     }, {})
 )
@@ -420,6 +431,7 @@ const getStepStatus = (index) => {
           : 'wait';
 };
 
+
 const showFlowDialog = async (order) => {
   try {
     currentFlowOrder.value = order;
@@ -430,38 +442,38 @@ const showFlowDialog = async (order) => {
     // 创建完整状态节点骨架
     const statusNodes = STATUS_FLOW.reduce((acc, status) => {
       acc[status] = {
-        status,
         changedAt: null,
         operator: null
       };
       return acc;
     }, {});
 
-    // 合并API数据
-    [...data, {
-      status: '待上会',
-      changedAt: order.created_at,
-      operator: order.applicant_id
-    }].forEach(item => {
+    // 合并API数据（包含操作人信息）
+    data.forEach(item => {
       if (statusNodes[item.status]) {
         statusNodes[item.status] = {
-          ...item,
-          changedAt: item.changedAt || order.completed_at
+          changedAt: item.changedAt,
+          operator: item.operator
         };
       }
     });
 
-    // 转换排序后的数组
-    statusHistory.value = STATUS_FLOW
-        .map(status => statusNodes[status])
-        .filter(item => item.changedAt); // 只显示有记录的状态
+    // 添加初始状态（待上会），使用当前用户作为申请人
+    statusNodes['待上会'] = {
+      changedAt: order.created_at,
+      operator: currentUser.value.name // 使用当前登录用户姓名
+    };
+
+    statusHistory.value = STATUS_FLOW.map(status => ({
+      status,
+      ...statusNodes[status]
+    }));
 
     flowDialogVisible.value = true;
   } catch (error) {
     handleError('获取流程历史失败', error);
   }
 };
-
 /* 辅助方法 */
 const handleError = (message, error) => {
   const errorMsg = error.response?.data?.message || error.message
@@ -519,5 +531,14 @@ const openStatusDialog = (row, event) => {
 
 :deep(.el-step__description.is-process) {
   color: #666;
+}
+.operator-text {
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.flow-container .el-step__description {
+  line-height: 1.5;
 }
 </style>

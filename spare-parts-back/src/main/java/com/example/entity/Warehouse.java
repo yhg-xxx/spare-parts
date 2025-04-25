@@ -9,7 +9,8 @@ public class Warehouse {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int location_id;
     String location_code;
-    String location_name;
+    @Column(name = "location_name")
+    String locationName;
     String description;
     String status;
     String created_at;
@@ -31,12 +32,12 @@ public class Warehouse {
         this.location_code = location_code;
     }
 
-    public String getLocation_name() {
-        return location_name;
+    public String getLocationName() {
+        return locationName;
     }
 
-    public void setLocation_name(String location_name) {
-        this.location_name = location_name;
+    public void setLocationName(String locationName) {
+        this.locationName = locationName;
     }
 
     public String getDescription() {

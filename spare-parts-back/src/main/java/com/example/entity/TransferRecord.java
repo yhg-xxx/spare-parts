@@ -27,7 +27,7 @@ public class TransferRecord {
     private String status;
 
     @Column(name = "sn")  // 新增数量字段
-    private String  an;
+    private String  sn;
 
 
     @Column(name = "created_at")
@@ -100,12 +100,11 @@ public class TransferRecord {
         this.createdAt = createdAt;
     }
 
-
-    public String getAn() {
-        return an;
+    public String getSn() {
+        return sn;
     }
 
-    public void setAn(String an) {
-        this.an = an;
+    public void setSn(String sn) {
+        this.sn = sn;
     }
 }

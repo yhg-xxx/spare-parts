@@ -3,9 +3,10 @@ package com.example.dao;
 import com.example.entity.InboundRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
-
+@Repository
 public interface InboundRecordRepository extends
         JpaRepository<InboundRecord, Integer>,
         JpaSpecificationExecutor<InboundRecord> { // 添加这个接口

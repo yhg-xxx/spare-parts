@@ -83,7 +83,10 @@
               <el-icon><Connection /></el-icon>
               <span class="menu-text">调拨审核</span>
             </router-link>
-
+            <router-link to="/view/faultorder" class="menu-item">
+              <el-icon><Connection /></el-icon>
+              <span class="menu-text">维修管理</span>
+            </router-link>
 
           <!-- 退出登录 -->
               <div class="logout-item" @click="handleLogout">
@@ -99,7 +102,10 @@
             <el-icon><Tickets /></el-icon>
             <span class="menu-text">领用申请</span>
           </router-link>
-
+          <router-link to="/view/faultorder" class="menu-item">
+            <el-icon><Connection /></el-icon>
+            <span class="menu-text">维修管理</span>
+          </router-link>
           <router-link to="/view/" class="menu-item">
             <el-icon><RefreshLeft /></el-icon>
             <span class="menu-text">备件返还</span>

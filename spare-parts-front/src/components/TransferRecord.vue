@@ -10,7 +10,7 @@
       <el-table-column prop="fromLocationName" label="原仓库" />
       <el-table-column prop="toLocationName" label="目标仓库" />
       <el-table-column prop="partName" label="备件名称" />
-      <el-table-column prop="quantity" label="数量" />
+      <el-table-column prop="sn" label="SN号" />
       <el-table-column prop="transferReason" label="调拨事由" />
       <el-table-column prop="applicantId" label="申请人ID" />
       <el-table-column prop="status" label="状态">
@@ -25,22 +25,62 @@
           {{ formatDate(row.createdAt) }}
         </template>
       </el-table-column>
+
     </el-table>
 
     <!-- 新增调拨记录对话框 -->
     <el-dialog v-model="addTransferDialogVisible" title="新增调拨记录" @close="clearAddTransferForm">
       <el-form :model="addTransferForm" ref="addTransferFormRef" label-width="100px">
         <el-form-item label="原仓库" prop="fromLocationName" required>
-          <el-input v-model="addTransferForm.fromLocationName" placeholder="请输入原仓库"></el-input>
+          <el-select
+              v-model="addTransferForm.fromLocationName"
+              placeholder="请选择原仓库"
+              @change="fetchSnListForAddForm">
+            <el-option
+                v-for="location in warehouseList"
+                :key="location.location_id"
+                :label="location.locationName"
+                :value="location.locationName">
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="目标仓库" prop="toLocationName" required>
-          <el-input v-model="addTransferForm.toLocationName" placeholder="请输入目标仓库"></el-input>
+          <el-select
+              v-model="addTransferForm.toLocationName"
+              placeholder="请选择目标仓库">
+            <el-option
+                v-for="location in warehouseList"
+                :key="location.location_id"
+                :label="location.locationName"
+                :value="location.locationName">
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="备件名称" prop="partName" required>
-          <el-input v-model="addTransferForm.partName" placeholder="请输入备件名称"></el-input>
+          <el-select
+              v-model="addTransferForm.partName"
+              placeholder="请选择备件名称"
+              @change="fetchSnListForAddForm">
+            <el-option
+                v-for="part in partList"
+                :key="part.partId"
+                :label="part.partName"
+                :value="part.partName">
+            </el-option>
+          </el-select>
         </el-form-item>
-        <el-form-item label="数量" prop="quantity" required>
-          <el-input-number v-model="addTransferForm.quantity" :min="1" placeholder="请输入数量"></el-input-number>
+        <el-form-item label="SN号" prop="sn" required>
+          <el-select
+              v-model="addTransferForm.sn"
+              placeholder="请选择SN号"
+              :disabled="!addTransferForm.fromLocationName || !addTransferForm.partName">
+            <el-option
+                v-for="item in snList"
+                :key="item"
+                :label="item"
+                :value="item">
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="调拨事由" prop="transferReason" required>
           <el-input v-model="addTransferForm.transferReason" type="textarea" placeholder="请输入调拨事由"></el-input>
@@ -53,13 +93,33 @@
     </el-dialog>
 
     <!-- 批量调拨对话框 -->
+    <!-- 批量调拨对话框 -->
     <el-dialog v-model="batchTransferDialogVisible" title="批量调拨" @close="clearBatchTransferForm">
       <el-form :model="batchTransferForm" ref="batchTransferFormRef" label-width="100px">
         <el-form-item label="原仓库" prop="fromLocationName" required>
-          <el-input v-model="batchTransferForm.fromLocationName" placeholder="请输入原仓库"></el-input>
+          <el-select
+              v-model="batchTransferForm.fromLocationName"
+              placeholder="请选择原仓库"
+              @change="fetchSnListForBatchForm">
+            <el-option
+                v-for="location in warehouseList"
+                :key="location.location_id"
+                :label="location.locationName"
+                :value="location.locationName">
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="目标仓库" prop="toLocationName" required>
-          <el-input v-model="batchTransferForm.toLocationName" placeholder="请输入目标仓库"></el-input>
+          <el-select
+              v-model="batchTransferForm.toLocationName"
+              placeholder="请选择目标仓库">
+            <el-option
+                v-for="location in warehouseList"
+                :key="location.location_id"
+                :label="location.locationName"
+                :value="location.locationName">
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="调拨事由" prop="transferReason" required>
           <el-input v-model="batchTransferForm.transferReason" type="textarea" placeholder="请输入调拨事由"></el-input>
@@ -69,12 +129,33 @@
           <el-table :data="batchTransferForm.parts" style="width: 100%; margin-top: 10px;">
             <el-table-column prop="partName" label="备件名称">
               <template #default="{ row, $index }">
-                <el-input v-model="row.partName" placeholder="备件名称"></el-input>
+                <!-- 修正：使用row.partName而不是addTransferForm.partName -->
+                <el-select
+                    v-model="row.partName"
+                    placeholder="请选择备件名称"
+                    @change="() => fetchSnListForBatchForm(row)">
+                  <el-option
+                      v-for="part in partList"
+                      :key="part.partId"
+                      :label="part.partName"
+                      :value="part.partName">
+                  </el-option>
+                </el-select>
               </template>
             </el-table-column>
-            <el-table-column prop="quantity" label="数量">
+            <el-table-column prop="sn" label="SN号">
               <template #default="{ row, $index }">
-                <el-input-number v-model="row.quantity" :min="1"></el-input-number>
+                <el-select
+                    v-model="row.sn"
+                    placeholder="请选择SN号"
+                    :disabled="!batchTransferForm.fromLocationName || !row.partName">
+                  <el-option
+                      v-for="item in row.snOptions || []"
+                      :key="item"
+                      :label="item"
+                      :value="item">
+                  </el-option>
+                </el-select>
               </template>
             </el-table-column>
             <el-table-column label="操作">
@@ -101,9 +182,32 @@ import router from "@/router.js";
 import { Plus } from "@element-plus/icons-vue";
 
 const currentUser = ref({});
-const transferList = ref([]); // 调拨记录数据列表
-const addTransferDialogVisible = ref(false); // 新增调拨记录对话框
-const batchTransferDialogVisible = ref(false); // 批量调拨对话框
+const transferList = ref([]);
+const addTransferDialogVisible = ref(false);
+const batchTransferDialogVisible = ref(false);
+const snList = ref([]);
+const warehouseList = ref([]);
+const partList = ref([]);
+
+// 新增调拨记录表单
+const addTransferForm = ref({
+  fromLocationName: '',
+  toLocationName: '',
+  partName: '',
+  sn: '',
+  transferReason: '',
+  status: '待审核',
+});
+
+// 批量调拨表单
+const batchTransferForm = ref({
+  fromLocationName: '',
+  toLocationName: '',
+  transferReason: '',
+  parts: [
+    { partName: '', sn: '', snOptions: [] }
+  ]
+});
 
 onMounted(async () => {
   const user = JSON.parse(sessionStorage.getItem('user'));
@@ -114,27 +218,69 @@ onMounted(async () => {
   }
   currentUser.value = user;
   await getTransferList();
+  await fetchWarehouseList();
+  await fetchPartList();
 });
 
-// 新增调拨记录表单
-const addTransferForm = ref({
-  fromLocationName: '',
-  toLocationName: '',
-  partName: '',
-  quantity: 1,
-  transferReason: '',
-  status: '待审核', // 默认状态
-});
+// 获取仓库列表
+const fetchWarehouseList = async () => {
+  try {
+    const res = await axios.get("http://localhost:8080/warehouse/x");
+    warehouseList.value = res.data;
+  } catch (error) {
+    ElMessage.error('获取仓库列表失败: ' + error.message);
+  }
+};
 
-// 批量调拨表单
-const batchTransferForm = ref({
-  fromLocationName: '',
-  toLocationName: '',
-  transferReason: '',
-  parts: [
-    { partName: '', quantity: 1 }
-  ]
-});
+// 获取备件列表
+// 修改 fetchPartList 方法
+const fetchPartList = async () => {
+  try {
+    const res = await axios.get("http://localhost:8080/spare_part");
+    // 检查是否有分页结构
+    partList.value = res.data.content || res.data;
+  } catch (error) {
+    ElMessage.error('获取备件列表失败: ' + error.message);
+  }
+};
+
+// 获取SN号列表（新增调拨表单）
+const fetchSnListForAddForm = async () => {
+  if (!addTransferForm.value.fromLocationName || !addTransferForm.value.partName) {
+    return;
+  }
+
+  try {
+    const res = await axios.get(
+        `http://localhost:8080/spare_part/sn?locationName=${addTransferForm.value.fromLocationName}&partName=${addTransferForm.value.partName}`
+    );
+    snList.value = res.data;
+    addTransferForm.value.sn = ''; // 重置SN号选择
+  } catch (error) {
+    ElMessage.error('获取SN号列表失败: ' + error.message);
+    snList.value = [];
+  }
+};
+
+// 获取SN号列表（批量调拨表单）
+// 获取SN号列表（批量调拨表单）
+// 获取SN号列表（批量调拨表单）
+const fetchSnListForBatchForm = async (row) => {
+  if (!batchTransferForm.value.fromLocationName || !row.partName) {
+    return;
+  }
+
+  try {
+    const res = await axios.get(
+        `http://localhost:8080/spare_part/sn?locationName=${batchTransferForm.value.fromLocationName}&partName=${row.partName}`
+    );
+    row.snOptions = res.data;
+    row.sn = ''; // 重置SN号选择
+  } catch (error) {
+    ElMessage.error('获取SN号列表失败: ' + error.message);
+    row.snOptions = [];
+  }
+};
 
 // 打开新增调拨记录对话框
 const openAddTransferDialog = () => {
@@ -152,10 +298,11 @@ const clearAddTransferForm = () => {
     fromLocationName: '',
     toLocationName: '',
     partName: '',
-    quantity: 1,
+    sn: '',
     transferReason: '',
     status: '待审核',
   };
+  snList.value = [];
 };
 
 // 清空批量调拨表单
@@ -165,14 +312,14 @@ const clearBatchTransferForm = () => {
     toLocationName: '',
     transferReason: '',
     parts: [
-      { partName: '', quantity: 1 }
+      {partName: '', sn: '', snOptions: []}
     ]
   };
 };
 
 // 添加备件项
 const addPartItem = () => {
-  batchTransferForm.value.parts.push({ partName: '', quantity: 1 });
+  batchTransferForm.value.parts.push({partName: '', sn: '', snOptions: []});
 };
 
 // 移除备件项
@@ -187,10 +334,8 @@ const removePartItem = (index) => {
 // 获取调拨记录列表
 const getTransferList = async () => {
   try {
-    const res = await axios.get("http://localhost:8080/api/transfer", {
-      withCredentials: true
-    });
-    transferList.value = res.data.list || res.data;
+    const res = await axios.get("http://localhost:8080/api/transfer");
+    transferList.value = res.data;
   } catch (error) {
     ElMessage.error('获取调拨记录失败: ' + error.message);
   }
@@ -204,9 +349,7 @@ const submitAddTransfer = async () => {
       applicantId: currentUser.value.user_id,
     };
 
-    await axios.post('http://localhost:8080/api/transfer', formData, {
-      withCredentials: true
-    });
+    await axios.post('http://localhost:8080/api/transfer', formData);
     await getTransferList();
     ElMessage.success('调拨记录新增成功！');
     addTransferDialogVisible.value = false;
@@ -228,7 +371,7 @@ const submitBatchTransfer = async () => {
 
     // 验证备件列表
     for (const part of batchTransferForm.value.parts) {
-      if (!part.partName || part.quantity <= 0) {
+      if (!part.partName || !part.sn) {
         ElMessage.error('请填写完整的备件信息');
         return;
       }
@@ -239,16 +382,13 @@ const submitBatchTransfer = async () => {
       fromLocationName: batchTransferForm.value.fromLocationName,
       toLocationName: batchTransferForm.value.toLocationName,
       partName: part.partName,
-      quantity: part.quantity,
+      sn: part.sn,
       transferReason: batchTransferForm.value.transferReason,
       applicantId: currentUser.value.user_id,
       status: '待审核'
     }));
 
-    const res = await axios.post('http://localhost:8080/api/transfer/batch', transfers, {
-      withCredentials: true
-    });
-
+    const res = await axios.post('http://localhost:8080/api/transfer/batch', transfers);
     await getTransferList();
     ElMessage.success(`成功提交${transfers.length}条调拨申请！`);
     batchTransferDialogVisible.value = false;
@@ -257,7 +397,10 @@ const submitBatchTransfer = async () => {
   }
 };
 
-// 显示数据时格式化时间
+// 批准调拨
+
+
+// 格式化日期
 const formatDate = (timestamp) => {
   if (!timestamp) return '-';
   return new Date(timestamp).toLocaleString();

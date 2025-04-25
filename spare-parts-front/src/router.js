@@ -50,6 +50,10 @@ const router = createRouter({
                         path: 'inbound',
                         name: 'inbound',
                         component: () => import('@/components/Inbound.vue'),
+                    },{
+                        path: 'faultorder',
+                        name: 'faultorder',
+                        component: () => import('@/components/Faultorder.vue'),
                     },
             ]
             }

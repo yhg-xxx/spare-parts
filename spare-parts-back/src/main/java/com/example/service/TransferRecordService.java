@@ -1,9 +1,13 @@
 package com.example.service;
 
+import com.example.dao.Spare_partRepository;
 import com.example.dao.TransferRecordRepository;
 import com.example.dao.InventoryRepository;
+import com.example.dao.WarehouseRepository;
+import com.example.entity.Spare_part;
 import com.example.entity.TransferRecord;
 import com.example.entity.Inventory;
+import com.example.entity.Warehouse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +25,11 @@ public class TransferRecordService {
 
     @Autowired
     private InventoryRepository inventoryRepository;
+    @Autowired
+    private Spare_partRepository spare_partRepository;
+
+    @Autowired
+    private WarehouseRepository warehouseRepository;
 
     public List<TransferRecord> getAllTransfers() {
         return transferRecordRepository.findAll();
@@ -46,15 +55,15 @@ public class TransferRecordService {
     }
 
     @Transactional
-    public TransferRecord updateStatus(int id, String status) {
-        Optional<TransferRecord> optionalTransfer = transferRecordRepository.findById(id);
+    public TransferRecord updateStatus(int transferId, String status) {
+        Optional<TransferRecord> optionalTransfer = transferRecordRepository.findById(transferId);
         if (optionalTransfer.isPresent()) {
             TransferRecord transfer = optionalTransfer.get();
             transfer.setStatus(status);
 
             // 只有当状态变为"已通过"时才更新库存
             if ("已通过".equals(status)) {
-                updateInventoryForTransfer(transfer);
+                updateInventoryAndSparePartForTransfer(transfer);
             }
 
             return transferRecordRepository.save(transfer);
@@ -62,21 +71,21 @@ public class TransferRecordService {
         return null;
     }
 
-    private void updateInventoryForTransfer(TransferRecord transfer) {
-        // 减少原仓库库存
-        Inventory fromInventory = inventoryRepository.findByPartNameAndLocationName(
-                transfer.getPartName(),
-                transfer.getFromLocationName()
-        );
-
-        if (fromInventory != null) {
-            int currentQuantity = Integer.parseInt(fromInventory.getNumber());
+    private void updateInventoryAndSparePartForTransfer(TransferRecord transfer) {
 
 
+        // 3. 更新备件信息
+        Optional<Spare_part> sparePartOpt = spare_partRepository.findBySn(transfer.getSn());
+        if (sparePartOpt.isPresent()) {
+            Spare_part sparePart = sparePartOpt.get();
 
 
-
-
+            // 获取目标仓库的locationId
+            Optional<Warehouse> warehouseOpt = warehouseRepository.findByLocationName(transfer.getToLocationName());
+            if (warehouseOpt.isPresent()) {
+                sparePart.setLocationId(warehouseOpt.get().getLocation_id());
+                spare_partRepository.save(sparePart);
+            }
         }
     }
 }

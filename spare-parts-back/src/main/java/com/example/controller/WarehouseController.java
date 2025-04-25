@@ -1,4 +1,5 @@
 package com.example.controller;
+import com.example.dao.Spare_partRepository;
 import com.example.dao.WarehouseRepository;
 import com.example.entity.Warehouse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,9 @@ public class WarehouseController {
 
     @Autowired
     private WarehouseRepository warehouseRepository;
+
+    @Autowired
+    private Spare_partRepository sparePartRepository;
     @PostMapping("/warehouse")
     public Warehouse createWarehouse(@RequestBody Warehouse warehouse) {
         return warehouseRepository.save(warehouse);
@@ -50,6 +54,18 @@ public class WarehouseController {
     @GetMapping("/warehouse/x")
     public List<Warehouse> getAllWarehouses() {
         return warehouseRepository.findAll();
+    }
+
+    @GetMapping("/spare_part/sn")
+    public List<String> getSnByLocationAndPart(
+            @RequestParam String locationName,
+            @RequestParam String partName) {
+        // 根据仓库名获取locationId
+        Integer locationId = warehouseRepository.findByLocationName(locationName)
+                .map(Warehouse::getLocation_id)
+                .orElseThrow(() -> new RuntimeException("仓库不存在"));
+
+        return sparePartRepository.findSnByLocationIdAndPartName(locationId, partName);
     }
 }
 
