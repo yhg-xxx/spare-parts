@@ -6,12 +6,20 @@
     <!-- 领用记录表格 -->
     <el-table :data="usageRequests" stripe style="width: 100%" class="mt-4">
       <el-table-column prop="id" label="领用单号" width="120" />
-      <el-table-column prop="sparepartSn" label="备件SN" />
+      <el-table-column prop="partName" label="备件名称" />
+      <el-table-column prop="partModel" label="备件型号" />
       <el-table-column prop="type" label="类型">
         <template #default="{row}">
-          <el-tag :type="row.type === '维修借用' ? 'warning' : ''">
+          <el-tag :type="row.type === '维修借用' ? 'warning' : 'success'">
             {{ row.type }}
+            <span v-if="row.autoConverted" style="margin-left: 5px;font-size:12px">(系统自动转换)</span>
           </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="description" label="申请说明" width="200" show-overflow-tooltip>
+        <template #default="{row}">
+          <span v-if="row.description">{{ row.description }}</span>
+          <span v-else style="color: #999">-</span>
         </template>
       </el-table-column>
       <el-table-column prop="applicantId" label="申请人ID" />
@@ -27,16 +35,35 @@
           {{ formatDate(row.createTime) }}
         </template>
       </el-table-column>
+      <el-table-column label="出库时间">
+        <template #default="{row}">
+          {{ row.outTime ? formatDate(row.outTime) : '-' }}
+        </template>
+      </el-table-column>
 
     </el-table>
 
     <!-- 新增申请对话框 -->
     <el-dialog v-model="applyDialogVisible" title="备件领用申请" @close="clearApplyForm">
-      <el-form :model="applyForm" label-width="100px">
-        <el-form-item label="备件SN" required>
-          <el-input v-model="applyForm.sparepartSn" placeholder="输入备件序列号"/>
+      <el-form :model="applyForm" label-width="100px" :rules="formRules">
+        <!-- 新增备件名称 -->
+        <el-form-item label="备件名称" prop="partName" required>
+          <el-input
+              v-model="applyForm.partName"
+              placeholder="请输入备件标准名称（如：SSD-1TB）"
+          />
         </el-form-item>
-        <el-form-item label="领用类型" required>
+
+        <!-- 新增备件型号 -->
+        <el-form-item label="备件型号" prop="partModel" required>
+          <el-input
+              v-model="applyForm.partModel"
+              placeholder="请输入完整型号（如：SAMSUNG-860EVO）"
+          />
+        </el-form-item>
+
+        <!-- 原类型选择 -->
+        <el-form-item label="领用类型" prop="type" required>
           <el-select v-model="applyForm.type" placeholder="请选择">
             <el-option
                 v-for="t in usageTypes"
@@ -46,14 +73,18 @@
             />
           </el-select>
         </el-form-item>
+
+        <!-- 说明字段 -->
         <el-form-item label="申请说明">
           <el-input
               v-model="applyForm.description"
               type="textarea"
-              placeholder="填写申请理由（可选）"
+              :rows="3"
+              placeholder="请详细说明使用场景和用途"
           />
         </el-form-item>
       </el-form>
+
       <template #footer>
         <el-button @click="applyDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="submitApply">提交</el-button>
@@ -68,7 +99,8 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { Plus } from '@element-plus/icons-vue';
 import axios from 'axios';
 import router from '@/router.js';
-
+// 新增出库记录响应式变量
+const stockouts = ref([]);
 const applyDialogVisible = ref(false);
 const usageRequests = ref([]);
 const currentUser = ref(null);
@@ -78,8 +110,9 @@ const usageTypes = [
 ];
 
 const applyForm = ref({
-  sparepartSn: '',
   type: '',
+  partName: '',
+  partModel: '',
   description: ''
 });
 
@@ -92,20 +125,46 @@ onMounted(async () => {
     return;
   }
   currentUser.value = user;
+  await fetchStockouts();  // 先获取出库记录
   await fetchUsageRequests();
 });
 
-// 获取领用记录（前端过滤）
+// 修改后的领用记录获取方法
 const fetchUsageRequests = async () => {
   try {
     const res = await axios.get('/api/usage-requests', {
       withCredentials: true
     });
 
-    // 前端过滤当前用户记录
-    usageRequests.value = res.data.filter(item =>
-        item.applicantId === currentUser.value?.user_id
-    );
+    usageRequests.value = res.data
+        .filter(item => item.applicantId === currentUser.value?.user_id)
+        .map(item => {
+          // 关联出库记录
+          const stockout = stockouts.value.find(s => s.requestId === item.id);
+          const outTime = stockout?.outTime || null;
+
+          // 自动转换逻辑（使用来自Stockout的出库时间）
+          if (item.type === '维修借用' && outTime) {
+            const outTimeDate = new Date(outTime);
+            const now = new Date();
+            const diffHours = (now - outTimeDate) / (1000 * 60 * 60);
+
+            if (diffHours > 48) {
+              return {
+                ...item,
+                outTime, // 来自Stockout的出库时间
+                type: '维修申领',
+                status: '已出库-维修申领',
+                autoConverted: true
+              };
+            }
+          }
+
+          return {
+            ...item,
+            outTime // 合并出库时间到领用记录
+          };
+        });
 
   } catch (error) {
     ElMessage.error('获取记录失败: ' + error.message);
@@ -128,6 +187,7 @@ const submitApply = async () => {
     ElMessage.error(`提交失败: ${error.response?.data?.message || error.message}`);
   }
 };
+
 
 // 审批操作
 const handleApprove = async (id) => {
@@ -166,7 +226,9 @@ const getStatusTagType = (status) => {
     '待审核': 'warning',
     '已批准': 'success',
     '已拒绝': 'danger',
-    '待出库': 'info'
+    '待出库': 'info',
+    '已出库-维修借用': 'info',
+    '已出库-维修申领': 'success'
   };
   return typeMap[status] || '';
 };
@@ -178,6 +240,17 @@ const openApplyDialog = () => {
 
 const clearApplyForm = () => {
   applyDialogVisible.value = false;
+};
+// 新增：获取所有出库记录
+const fetchStockouts = async () => {
+  try {
+    const res = await axios.get('/api/stockouts/all', {
+      withCredentials: true
+    });
+    stockouts.value = res.data;
+  } catch (error) {
+    ElMessage.error('获取出库记录失败: ' + error.message);
+  }
 };
 </script>
 
