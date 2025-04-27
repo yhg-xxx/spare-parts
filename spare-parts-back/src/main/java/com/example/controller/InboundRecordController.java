@@ -3,19 +3,17 @@ package com.example.controller;
 import com.example.dao.InboundRecordRepository;
 import com.example.dao.Purchase_orderRepository;
 import com.example.dto.InboundBatchCreateRequest;
-import com.example.dto.InboundCreateRequest;
 import com.example.dto.InboundWithPurchaseDTO;
+import com.example.dto.ResultDTO;
 import com.example.entity.InboundRecord;
 
-import com.example.entity.Purchase_order;
 import com.example.service.InboundRecordService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -109,6 +107,14 @@ public class InboundRecordController {
     public Map<String, String> handleNotFound(Exception ex) {
         return Map.of("message", ex.getMessage());
     }
-
+    @PostMapping("/import")
+    public ResultDTO<Integer> importExcel(@RequestParam("file") MultipartFile file) {
+        try {
+            int count = service.importFromExcel(file);
+            return ResultDTO.success(count);
+        } catch (Exception e) {
+            return ResultDTO.error(e.getMessage());
+        }
+    }
 
 }

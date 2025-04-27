@@ -60,8 +60,9 @@
         layout="total, sizes, prev, pager, next"
         :total="total"
         v-model:current-page="listQuery.page"
-        v-model:page-size="listQuery.limit"
+        v-model::page-size="listQuery.size"
         @current-change="handleCurrentChange"
+        @size-change="handleSizeChange"
         class="pagination-container"
     />
 
@@ -199,13 +200,12 @@ const dialogType = ref('create')
 const dialogTypeMap = { create: '新增备件', update: '编辑备件' }
 const warehouseOptions = ref([]) // 仓库列表
 
-// 查询参数
+// 修改查询参数对象 (src/views/SparePart.vue)
 const listQuery = reactive({
   page: 1,
-  limit: 10,
+  size: 10, // 将limit改为size保持与后端一致
   partName: ''
 })
-
 // 表单数据
 const formRef = ref(null)
 const formData = reactive({
@@ -246,7 +246,7 @@ const fetchData = async () => {
   try {
     const params = {
       page: listQuery.page - 1,
-      size: listQuery.limit,
+      size: listQuery.size, // ✅ 统一使用size
       partName: listQuery.partName
     }
     const res = await axios.get('/spare_part', { params })
@@ -287,7 +287,11 @@ const submitForm = async () => {
     console.error('提交失败:', error)
   }
 }
-
+// 新增每页数量变化处理
+const handleSizeChange = (newSize) => {
+  listQuery.size = newSize
+  fetchData()
+}
 // 初始化加载
 onMounted(() => {
   fetchData()

@@ -11,6 +11,22 @@
         >
           新增入库
         </el-button>
+        <!-- 新增下载模板按钮 -->
+        <el-button
+            type="success"
+            :icon="Download"
+            @click="downloadTemplate"
+        >
+          下载Excel模板
+        </el-button>
+        <!-- 在下载模板按钮后添加导入按钮 -->
+        <el-button
+            type="warning"
+            :icon="Upload"
+            @click="openImportDialog"
+        >
+          Excel导入
+        </el-button>
       </el-col>
       <el-col :span="12" class="flex items-center justify-end">
         <div class="flex gap-2 flex-wrap">
@@ -255,6 +271,29 @@
         </el-descriptions-item>
       </el-descriptions>
     </el-dialog>
+    <!-- 添加导入对话框 -->
+    <el-dialog v-model="importDialogVisible" title="Excel导入">
+      <el-upload
+          class="upload-demo"
+          drag
+          :action="uploadUrl"
+          :headers="headers"
+          :on-success="handleUploadSuccess"
+          :on-error="handleUploadError"
+          :before-upload="beforeUpload"
+          accept=".xlsx"
+      >
+        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+        <div class="el-upload__text">
+          将文件拖到此处或<em>点击上传</em>
+        </div>
+        <template #tip>
+          <div class="el-upload__tip">
+            仅支持.xlsx格式文件，模板请先下载
+          </div>
+        </template>
+      </el-upload>
+    </el-dialog>
 
   </div>
 
@@ -265,7 +304,7 @@ import { onMounted, reactive, ref } from 'vue';
 import { ElMessage } from "element-plus";
 import axios from "axios";
 import router from "@/router.js";
-import { Plus, Search } from "@element-plus/icons-vue";
+import {Download, Plus, Search, Upload, UploadFilled} from "@element-plus/icons-vue";
 
 /* ---------------------------- 数据声明 ---------------------------- */
 // 用户相关
@@ -454,7 +493,16 @@ const clearSearch = () => {
   queryParams.dateRange = [];
   getDailyList();
 };
-
+// 在methods中添加下载方法
+const downloadTemplate = () => {
+  try {
+    // 直接通过浏览器下载
+    const url = `http://localhost:8080/files/download/1745724628279_%E5%A4%87%E4%BB%B6%E5%85%A5%E5%BA%93%E6%A8%A1%E7%89%88.xlsx`
+    window.open(url, '_blank')
+  } catch (error) {
+    ElMessage.error('模板下载失败: ' + error.message)
+  }
+}
 // 格式化函数
 const formatCurrency = (value) => value ? `¥${Number(value).toFixed(2)}` : '-';
 const formatPercentage = (value) => value ? `${(value * 100).toFixed(2)}%` : '-';
@@ -468,6 +516,41 @@ const getStatusTag = (status) => {
     '坏件': 'danger'
   }
   return map[status] || 'info';
+};
+// 添加导入相关状态
+const importDialogVisible = ref(false);
+const uploadUrl = ref('http://localhost:8080/api/inbound-records/import');
+
+// 打开导入对话框
+const openImportDialog = () => {
+  importDialogVisible.value = true;
+};
+
+// 上传前校验
+const beforeUpload = (file) => {
+  const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  if (!isExcel) {
+    ElMessage.error('只能上传.xlsx格式文件');
+    return false;
+  }
+  return true;
+};
+
+// 上传成功处理
+const handleUploadSuccess = (response) => {
+  if (response.code === 200) {
+    ElMessage.success(`成功导入${response.data}条记录`);
+    getDailyList();
+  } else {
+    ElMessage.error(response.msg);
+  }
+  importDialogVisible.value = false;
+};
+
+// 上传失败处理
+const handleUploadError = () => {
+  ElMessage.error('文件上传失败');
+  importDialogVisible.value = false;
 };
 </script>
 <style scoped>

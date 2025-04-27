@@ -64,9 +64,8 @@ public class Spare_partController {
     @GetMapping("/spare_part")
     public ResponseEntity<Page<SparePartWithWarehouseDTO>> getSpareParts(
             @RequestParam(required = false) String partName,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
+            @RequestParam(defaultValue = "0") int page, // 接收前端传来的page-1
+            @RequestParam(defaultValue = "10") int size) { // 参数名保持size
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(sparePartService.searchParts(partName, pageable));
     }

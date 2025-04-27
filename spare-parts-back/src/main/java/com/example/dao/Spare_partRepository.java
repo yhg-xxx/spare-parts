@@ -37,7 +37,7 @@ public interface Spare_partRepository extends JpaRepository<Spare_part, Integer>
             Pageable pageable
     );
     Optional<Spare_part> findBySn(String sn);
-    @Query("SELECT s.sn FROM Spare_part s WHERE s.locationId = :locationId AND s.partName = :partName")
+    @Query("SELECT s.sn FROM Spare_part s WHERE s.locationId = :locationId AND s.partName = :partName AND s.sparePartStatus IN (com.example.entity.Spare_part.SparePartStatus.新好件, com.example.entity.Spare_part.SparePartStatus.修好件)")
     List<String> findSnByLocationIdAndPartName(
             @Param("locationId") Integer locationId,
             @Param("partName") String partName);
