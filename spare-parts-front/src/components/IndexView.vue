@@ -13,14 +13,45 @@
 
         <!-- 库管员菜单 -->
         <div v-if="user.role === '库管员'" class="menu-container">
+          <el-menu
+              router
+              :default-active="$route.path"
+              class="side-menu"
+              background-color="#fff"
+              text-color="#606266"
+              active-text-color="#409eff"
+          >
+            <!-- 基础信息子菜单 -->
+            <el-sub-menu index="basic-info">
+              <template #title>
+                <el-icon><FolderOpened /></el-icon>
+                <span>基础信息</span>
+              </template>
+
+              <el-menu-item index="/view/warehouse">
+                <el-icon><MapLocation /></el-icon>
+                <span>仓库信息</span>
+              </el-menu-item>
+
+              <el-menu-item index="/view/sparepart">
+                <el-icon><Collection /></el-icon>
+                <span>备件信息</span>
+              </el-menu-item>
+
+              <el-menu-item index="/view/inventory">
+                <el-icon><Box /></el-icon>
+                <span>库存管理</span>
+              </el-menu-item>
+            </el-sub-menu>
+          </el-menu>
           <router-link to="/view/purchase" class="menu-item">
             <el-icon><Goods /></el-icon>
             <span class="menu-text">采购管理</span>
           </router-link>
 
-          <router-link to="/view/inventory" class="menu-item">
-            <el-icon><Box /></el-icon>
-            <span class="menu-text">库存管理</span>
+          <router-link to="/view/inbound" class="menu-item">
+            <el-icon><Download /></el-icon>
+            <span class="menu-text">备件入库</span>
           </router-link>
 
           <router-link to="/view/transferManagement" class="menu-item">
@@ -31,15 +62,6 @@
           <router-link to="/view/UsageRequestReview" class="menu-item">
             <el-icon><DocumentChecked /></el-icon>
             <span class="menu-text">领用审核</span>
-          </router-link>
-
-          <router-link to="/view/inbound" class="menu-item">
-            <el-icon><Download /></el-icon>
-            <span class="menu-text">备件入库</span>
-          </router-link>
-          <router-link to="/view/ReturnAudit" class="menu-item">
-            <el-icon><Download /></el-icon>
-            <span class="menu-text">备件审核返还</span>
           </router-link>
           <!-- 新增退出登录 -->
           <div class="logout-item" @click="handleLogout">
@@ -88,7 +110,7 @@
               <span class="menu-text">调拨审核</span>
             </router-link>
             <router-link to="/view/faultorder" class="menu-item">
-              <el-icon><Connection /></el-icon>
+              <el-icon><Tools /></el-icon>
               <span class="menu-text">维修管理</span>
             </router-link>
 
@@ -107,13 +129,12 @@
             <span class="menu-text">领用申请</span>
           </router-link>
           <router-link to="/view/faultorder" class="menu-item">
-            <el-icon><Connection /></el-icon>
+            <el-icon><Tools /></el-icon>
             <span class="menu-text">维修管理</span>
           </router-link>
-
-          <router-link to="/view/ReturnApply" class="menu-item">
+          <router-link to="/view/" class="menu-item">
             <el-icon><RefreshLeft /></el-icon>
-            <span class="menu-text">备件返还申请</span>
+            <span class="menu-text">备件返还</span>
           </router-link>
           <!-- 新增退出登录 -->
           <div class="logout-item" @click="handleLogout">
@@ -141,7 +162,7 @@ import {
   MapLocation,
   Collection,
   Tickets,
-  RefreshLeft, SwitchButton, FolderOpened
+  RefreshLeft, SwitchButton, FolderOpened, Tools
 } from "@element-plus/icons-vue";
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';

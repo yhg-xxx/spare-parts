@@ -116,7 +116,7 @@
                 {{ formatType(row.sparePartType) }}
               </template>
             </el-table-column>
-            <el-table-column prop="location_name" label="仓库" >
+            <el-table-column prop="locationName" label="仓库" >
             <template #default="{row}">
               {{ getLocationName(row.locationId) }}
             </template>
@@ -299,6 +299,7 @@ const fetchSpareParts = async () => {
     allSpareParts.value = res.data.filter(item =>
         item.status !== '已出库' &&
         (item.sparePartStatus === '新好件' || item.sparePartStatus === '修好件')
+
     );
   } catch (error) {
     ElMessage.error('获取备件库存失败');

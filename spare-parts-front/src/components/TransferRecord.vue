@@ -232,13 +232,19 @@ const fetchWarehouseList = async () => {
   }
 };
 
-// 获取备件列表
-// 修改 fetchPartList 方法
+
+// 修改后的获取备件列表方法
 const fetchPartList = async () => {
   try {
     const res = await axios.get("http://localhost:8080/spare_part");
-    // 检查是否有分页结构
-    partList.value = res.data.content || res.data;
+    const data = res.data.content || res.data;
+
+    // 使用Map实现去重（保留第一个出现的记录）
+    const uniqueParts = Array.from(new Map(
+        data.map(part => [part.partName, part])
+    ).values());
+
+    partList.value = uniqueParts;
   } catch (error) {
     ElMessage.error('获取备件列表失败: ' + error.message);
   }

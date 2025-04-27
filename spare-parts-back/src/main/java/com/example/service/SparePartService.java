@@ -2,7 +2,6 @@ package com.example.service;
 
 import com.example.dao.Spare_partRepository;
 import com.example.dto.SparePartWithWarehouseDTO;
-import com.example.entity.Spare_part;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

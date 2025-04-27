@@ -7,7 +7,7 @@
     <el-table :data="dailyList" stripe style="width: 100%">
       <el-table-column prop="location_id" label="编号" />
       <el-table-column prop="location_code" label="仓库编码" />
-      <el-table-column prop="location_name" label="仓库名称" />
+      <el-table-column prop="locationName" label="仓库名称" />
       <el-table-column prop="description" label="仓库描述" />
       <el-table-column prop="created_at" label="创建时间">
         <template #default="{ row }">
@@ -36,8 +36,8 @@
         <el-form-item label="仓库编码" prop="location_code">
           <el-input v-model="addDailyForm.location_code" placeholder="请输入仓库编码"></el-input>
         </el-form-item>
-        <el-form-item label="仓库名称" prop="location_name">
-          <el-input v-model="addDailyForm.location_name" placeholder="请输入仓库名称"></el-input>
+        <el-form-item label="仓库名称" prop="locationName">
+          <el-input v-model="addDailyForm.locationName" placeholder="请输入仓库名称"></el-input>
         </el-form-item>
         <el-form-item label="仓库描述" prop="description">
           <el-input v-model="addDailyForm.description" placeholder="仓库描述"></el-input>
@@ -59,8 +59,8 @@
         <el-form-item label="仓库编码" prop="location_code">
           <el-input v-model="editDailyForm.location_code" placeholder="请输入仓库编码"></el-input>
         </el-form-item>
-        <el-form-item label="仓库名称" prop="location_name">
-          <el-input v-model="editDailyForm.location_name" placeholder="请输入仓库名称"></el-input>
+        <el-form-item label="仓库名称" prop="locationName">
+          <el-input v-model="editDailyForm.locationName" placeholder="请输入仓库名称"></el-input>
         </el-form-item>
         <el-form-item label="仓库描述" prop="description">
           <el-input v-model="editDailyForm.description" placeholder="仓库描述"></el-input>
@@ -106,7 +106,7 @@ onMounted(async () => {
 // 新增仓库表单
 const addDailyForm = ref({
   location_code: '',
-  location_name: '',
+  locationName: '',
   description: '',
   name:'',
   status: '可用',      // 状态（不需要用户输入，直接设为初始值）
@@ -116,7 +116,7 @@ const addDailyForm = ref({
 // 修改仓库表单
 const editDailyForm = ref({
   location_code: '',
-  location_name: '',
+  locationName: '',
   description: '',
   name:'',
   status: '可用',      // 状态（不需要用户输入，直接设为初始值）
@@ -136,7 +136,7 @@ const openEditDailyDialog = (row) => {
 const clearAddDailyForm = () => {
   addDailyForm.value = {
     location_code: '',
-    location_name: '',
+    locationName: '',
     description: '',
     name:'',
     status: '可用',
@@ -147,7 +147,7 @@ const clearAddDailyForm = () => {
 const clearEditDailyForm = () => {
   editDailyForm.value = {
     location_code: '',
-    location_name: '',
+    locationName: '',
     description: '',
     name:'',
     status: '可用',
