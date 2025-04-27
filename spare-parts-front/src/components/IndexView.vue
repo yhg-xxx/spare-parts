@@ -37,6 +37,10 @@
             <el-icon><Download /></el-icon>
             <span class="menu-text">备件入库</span>
           </router-link>
+          <router-link to="/view/ReturnAudit" class="menu-item">
+            <el-icon><Download /></el-icon>
+            <span class="menu-text">备件审核返还</span>
+          </router-link>
           <!-- 新增退出登录 -->
           <div class="logout-item" @click="handleLogout">
             <el-icon><SwitchButton /></el-icon>
@@ -106,9 +110,10 @@
             <el-icon><Connection /></el-icon>
             <span class="menu-text">维修管理</span>
           </router-link>
-          <router-link to="/view/" class="menu-item">
+
+          <router-link to="/view/ReturnApply" class="menu-item">
             <el-icon><RefreshLeft /></el-icon>
-            <span class="menu-text">备件返还</span>
+            <span class="menu-text">备件返还申请</span>
           </router-link>
           <!-- 新增退出登录 -->
           <div class="logout-item" @click="handleLogout">

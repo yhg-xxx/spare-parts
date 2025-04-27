@@ -13,8 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @RestController
 public class Spare_partController {
@@ -69,5 +68,63 @@ public class Spare_partController {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(sparePartService.searchParts(partName, pageable));
     }
+    @GetMapping("/spare_part/x")
+    public List<Spare_part> getAllspart() {
+        return spare_partRepository.findAll();
+    }
+    // Spare_partController.java 新增方法
+    @PutMapping("/spare_part/{part_id}/status")
+    public ResponseEntity<Map<String, Object>> updateSparePartStatus(
+            @PathVariable("part_id") int partId,
+            @RequestBody Map<String, String> statusUpdate) {
 
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // 1. 获取备件信息
+            Optional<Spare_part> optionalPart = spare_partRepository.findById(partId);
+            if (!optionalPart.isPresent()) {
+                response.put("code", 404);
+                response.put("message", "备件不存在");
+                return ResponseEntity.status(404).body(response);
+            }
+
+            // 2. 校验状态值
+            String newStatus = statusUpdate.get("status");
+            if (!List.of("在库", "已出库").contains(newStatus)) {
+                response.put("code", 400);
+                response.put("message", "无效状态值，允许值：[在库, 已出库]");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // 3. 更新状态
+            Spare_part part = optionalPart.get();
+            part.setStatus(newStatus); // 仅更新状态字段
+            spare_partRepository.save(part);
+
+            response.put("code", 200);
+            response.put("message", "状态更新成功");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("code", 500);
+            response.put("message", "服务器内部错误");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    // 添加在 Spare_partController 类中
+    @GetMapping("/spare_part/bySn/{sn}")
+    public ResponseEntity<?> getBySn(@PathVariable String sn) {
+        try {
+            Optional<Spare_part> part = spare_partRepository.findBySn(sn);
+            if (part.isPresent()) {
+                return ResponseEntity.ok(part.get());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Collections.singletonMap("error", "SN码不存在"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Collections.singletonMap("error", "服务器错误"));
+        }
+    }
 }

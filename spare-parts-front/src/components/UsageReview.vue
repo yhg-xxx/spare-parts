@@ -298,7 +298,7 @@ const fetchSpareParts = async () => {
     const res = await axios.get('/spare_part/x');
     allSpareParts.value = res.data.filter(item =>
         item.status !== '已出库' &&
-        item.sparePartStatus === '新好件' // 保留原有状态过滤
+        (item.sparePartStatus === '新好件' || item.sparePartStatus === '修好件')
     );
   } catch (error) {
     ElMessage.error('获取备件库存失败');
@@ -310,11 +310,11 @@ const showOutDialog = async (row) => {
   currentApply.value = row;
   await fetchSpareParts();
 
-  // 匹配相同名称和型号的备件
+  // 匹配相同名称和型号的备件（包含新好件和修好件）
   matchedSpareParts.value = allSpareParts.value.filter(item =>
       item.partName === row.partName &&
       item.partModel === row.partModel &&
-      item.sparePartStatus === '新好件' // 只显示新好件
+      (item.sparePartStatus === '新好件' || item.sparePartStatus === '修好件') // 新增修好件
   );
 
   outDialogVisible.value = true;
@@ -433,7 +433,7 @@ const getLocationName = (locationId) => {
   );
 
   // 返回匹配结果
-  return warehouse ? warehouse.location_name : locationId;
+  return warehouse ? warehouse.locationName : locationId;
 };
 // 新增：处理表格多选
 const handleSelectionChange = (selection) => {

@@ -75,10 +75,19 @@ public class StockoutController {
     }
 
     // StockoutController.java
+    // StockoutController.java 修改 /all 接口
+    // StockoutController.java
     @GetMapping("/all")
-    public ResponseEntity<List<Stockout>> getAllStockouts() {
+    public ResponseEntity<List<Stockout>> getAllStockouts(
+            @RequestParam(required = false) List<String> status) { // 改为接收List
+
+        if (status != null && !status.isEmpty()) {
+            // 使用新的IN查询方法
+            return ResponseEntity.ok(stockoutRepository.findByStatusIn(status));
+        }
         return ResponseEntity.ok(stockoutRepository.findAll());
     }
+
 
 }
 

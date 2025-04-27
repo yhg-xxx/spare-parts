@@ -54,6 +54,14 @@ const router = createRouter({
                         path: 'faultorder',
                         name: 'faultorder',
                         component: () => import('@/components/Faultorder.vue'),
+                    },{
+                        path: 'ReturnApply',
+                        name: 'ReturnApply',
+                        component: () => import('@/components/ReturnApply.vue'),
+                    },{
+                        path: 'ReturnAudit',
+                        name: 'ReturnAudit',
+                        component: () => import('@/components/ReturnAudit.vue'),
                     },
             ]
             }
