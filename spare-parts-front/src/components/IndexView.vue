@@ -7,8 +7,12 @@
     <div class="app-container">
       <!-- 侧边栏 -->
       <div class="sidebar">
+        <!-- 修改后的侧边栏头部 -->
         <div class="sidebar-header">
-          <h2 class="welcome-message">欢迎 {{ user.name }}!</h2>
+          <h2 class="welcome-message">
+            欢迎 {{ user.name }}
+            <div class="user-role">{{ user.role }}</div>
+          </h2>
         </div>
 
         <!-- 库管员菜单 -->
@@ -48,21 +52,51 @@
             <el-icon><Goods /></el-icon>
             <span class="menu-text">采购管理</span>
           </router-link>
+          <el-menu
+              router
+              :default-active="$route.path"
+              class="side-menu"
+              background-color="#fff"
+              text-color="#606266"
+              active-text-color="#409eff"
+          >
+            <!-- 基础信息子菜单 -->
+            <el-sub-menu index="basic-info">
+              <template #title>
+                <el-icon><FolderOpened /></el-icon>
+                <span>备件出入库</span>
+              </template>
 
-          <router-link to="/view/inbound" class="menu-item">
-            <el-icon><Download /></el-icon>
-            <span class="menu-text">备件入库</span>
-          </router-link>
+              <el-menu-item index="/view/inbound">
+                <el-icon><Download /></el-icon>
+                <span>备件入库</span>
+              </el-menu-item>
+
+              <el-menu-item index="/view/UsageRequestReview">
+                <el-icon><DocumentChecked /></el-icon>
+                <span>领用审核</span>
+              </el-menu-item>
+
+              <el-menu-item index="/view/ReturnAudit">
+                <el-icon><Connection /></el-icon>
+                <span>返还审核</span>
+              </el-menu-item>
+            </el-sub-menu>
+          </el-menu>
 
           <router-link to="/view/transferManagement" class="menu-item">
             <el-icon><Connection  /></el-icon>
-            <span class="menu-text">调拨申请</span>
+            <span class="menu-text">调拨记录</span>
+          </router-link>
+          <router-link to="/view/faultorder" class="menu-item">
+            <el-icon><Tools /></el-icon>
+            <span class="menu-text">维修管理</span>
+          </router-link>
+          <router-link to="/view/faultorder1" class="menu-item">
+            <el-icon><Document /></el-icon>
+            <span class="menu-text">备件工单</span>
           </router-link>
 
-          <router-link to="/view/UsageRequestReview" class="menu-item">
-            <el-icon><DocumentChecked /></el-icon>
-            <span class="menu-text">领用审核</span>
-          </router-link>
           <!-- 新增退出登录 -->
           <div class="logout-item" @click="handleLogout">
             <el-icon><SwitchButton /></el-icon>
@@ -128,13 +162,13 @@
             <el-icon><Tickets /></el-icon>
             <span class="menu-text">领用申请</span>
           </router-link>
+          <router-link to="/view/ReturnApply" class="menu-item">
+            <el-icon><RefreshLeft /></el-icon>
+            <span class="menu-text">返还申请</span>
+          </router-link>
           <router-link to="/view/faultorder" class="menu-item">
             <el-icon><Tools /></el-icon>
             <span class="menu-text">维修管理</span>
-          </router-link>
-          <router-link to="/view/" class="menu-item">
-            <el-icon><RefreshLeft /></el-icon>
-            <span class="menu-text">备件返还</span>
           </router-link>
           <!-- 新增退出登录 -->
           <div class="logout-item" @click="handleLogout">
@@ -162,7 +196,7 @@ import {
   MapLocation,
   Collection,
   Tickets,
-  RefreshLeft, SwitchButton, FolderOpened, Tools
+  RefreshLeft, SwitchButton, FolderOpened, Tools, Document
 } from "@element-plus/icons-vue";
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
@@ -200,6 +234,24 @@ const user = computed(() => userData.value);
 </script>
 
 <style scoped>
+
+/* 新增角色样式 */
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.welcome-message {
+  font-size: 18px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.user-role {
+  font-size: 14px;
+  color: #909399;
+  font-weight: normal;
+}
 .app-container {
   display: flex;
   min-height: 100vh;

@@ -1,11 +1,70 @@
 <template>
   <div>
-    <!-- 新增调拨记录按钮 -->
-    <el-button @click="openAddTransferDialog" type="primary" :icon="Plus">新增调拨</el-button>
-    <el-button @click="openBatchTransferDialog" type="primary" :icon="Plus">批量调拨</el-button>
+    <el-dialog v-model="importDialogVisible" title="Excel导入" width="500px">
+      <el-upload
+          class="upload-dragger"
+          drag
+          :action="importUrl"
+          :data="{ applicantId: currentUser.user_id }"
+          :with-credentials="true"
+          :before-upload="beforeUpload"
+          :on-success="handleUploadSuccess"
+          :show-file-list="false"
+      >
+        <div class="upload-area">
+          <el-icon :size="40" color="#409eff"><Upload /></el-icon>
+          <div class="upload-text">
+            <p>点击或将文件拖拽到此区域</p>
+            <p class="upload-tip">支持.xlsx格式文件</p>
+          </div>
+        </div>
+      </el-upload>
+    </el-dialog>
+    <!-- 操作按钮和筛选容器 -->
+    <!-- 操作栏容器 -->
+    <div class="operation-container">
+      <!-- 左侧操作组 -->
+      <div class="left-actions">
+        <el-button-group>
+          <el-button type="primary" @click="openAddTransferDialog" :icon="Plus">新增调拨</el-button>
+          <el-button type="primary" @click="openBatchTransferDialog" :icon="Plus">批量调拨</el-button>
+          <el-button type="primary" @click="downloadTemplate" :icon="Download">下载模板</el-button>
+        </el-button-group>
+      </div>
 
+      <!-- 修改右侧操作组部分 -->
+      <div class="right-actions">
+        <!-- 修改后正确代码 -->
+        <div class="filter-group">
+          <el-button
+              type="success"
+              plain
+              :icon="Upload"
+              @click="openImportDialog"
+          >
+            导入Excel
+          </el-button>
+
+          <!-- 状态筛选 -->
+          <el-select
+              v-model="selectedStatus"
+              multiple
+              collapse-tags
+              placeholder="状态筛选"
+              style="width: 160px;"
+          >
+            <el-option
+                v-for="status in statusOptions"
+                :key="status.value"
+                :label="status.label"
+                :value="status.value"
+            />
+          </el-select>
+        </div>
+      </div>
+    </div>
     <!-- 调拨记录列表 -->
-    <el-table :data="transferList" stripe style="width: 100%">
+    <el-table :data="filteredTransferList" stripe style="width: 100%">
       <el-table-column prop="transferId" label="调拨记录ID" />
       <el-table-column prop="fromLocationName" label="原仓库" />
       <el-table-column prop="toLocationName" label="目标仓库" />
@@ -179,8 +238,8 @@ import { onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from "element-plus";
 import axios from "axios";
 import router from "@/router.js";
-import { Plus } from "@element-plus/icons-vue";
-
+import {Check, Plus, Upload} from "@element-plus/icons-vue";
+const importUrl = ref('http://localhost:8080/api/transfer/import') // 后端接口地址
 const currentUser = ref({});
 const transferList = ref([]);
 const addTransferDialogVisible = ref(false);
@@ -188,7 +247,35 @@ const batchTransferDialogVisible = ref(false);
 const snList = ref([]);
 const warehouseList = ref([]);
 const partList = ref([]);
+// 在原有代码基础上增加以下内容
+import { computed } from 'vue'
 
+const statusOptions = [
+  { value: '待审核', label: '待审核', color: '#e6a23c' },
+  { value: '已通过', label: '已通过', color: '#67c23a' },
+  { value: '已驳回', label: '已驳回', color: '#f56c6c' }
+]
+
+// 选中状态（数组实现多选）
+const selectedStatus = ref([])
+
+// 切换状态选择
+const toggleStatus = (status) => {
+  const index = selectedStatus.value.indexOf(status)
+  if (index > -1) {
+    selectedStatus.value.splice(index, 1)
+  } else {
+    selectedStatus.value.push(status)
+  }
+}
+
+// 过滤后的数据
+const filteredTransferList = computed(() => {
+  if (selectedStatus.value.length === 0) return transferList.value
+  return transferList.value.filter(item =>
+      selectedStatus.value.includes(item.status)
+  )
+})
 // 新增调拨记录表单
 const addTransferForm = ref({
   fromLocationName: '',
@@ -249,7 +336,40 @@ const fetchPartList = async () => {
     ElMessage.error('获取备件列表失败: ' + error.message);
   }
 };
-
+// 新增导入对话框显示状态
+const importDialogVisible = ref(false)
+// 下载模板
+const downloadTemplate = () => {
+  window.location.href = 'http://localhost:8080/files/download/1745809622545_%E5%A4%87%E4%BB%B6%E8%B0%83%E6%8B%A8%E6%A8%A1%E7%89%88.xlsx';
+}
+// 修改导入按钮点击事件（替换原有el-upload）
+const openImportDialog = () => {
+  importDialogVisible.value = true
+}
+// 修改beforeUpload方法
+const beforeUpload = (file) => {
+  const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  if (!isExcel) {
+    ElMessage.error('仅支持.xlsx格式文件')
+  }
+  return isExcel
+}
+// 修改上传成功处理
+const handleUploadSuccess = (res) => {
+  importDialogVisible.value = false
+  handleImportSuccess(res) // 调用原有处理逻辑
+}
+// 处理导入结果
+const handleImportSuccess = (res) => {
+  if (res.errors && res.errors.length > 0) {
+    ElMessage.warning(`导入完成，成功 ${res.successCount} 条，失败 ${res.errorCount} 条`);
+    // 显示错误详情（示例）
+    this.errorDetails = res.errors;
+  } else {
+    ElMessage.success(`成功导入 ${res.successCount} 条记录`);
+  }
+  this.getTransferList(); // 刷新列表
+}
 // 获取SN号列表（新增调拨表单）
 const fetchSnListForAddForm = async () => {
   if (!addTransferForm.value.fromLocationName || !addTransferForm.value.partName) {
@@ -268,8 +388,7 @@ const fetchSnListForAddForm = async () => {
   }
 };
 
-// 获取SN号列表（批量调拨表单）
-// 获取SN号列表（批量调拨表单）
+
 // 获取SN号列表（批量调拨表单）
 const fetchSnListForBatchForm = async (row) => {
   if (!batchTransferForm.value.fromLocationName || !row.partName) {
@@ -428,7 +547,151 @@ const getStatusTagType = (status) => {
 </script>
 
 <style scoped>
-.dialog-footer {
-  text-align: right;
+/* 操作容器 */
+.operation-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 4px;
+
+  /* 移动端适配 */
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 12px;
+
+    .left-actions, .right-actions {
+      width: 100%;
+    }
+
+    .el-button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .upload-wrapper {
+      width: 100%;
+      .el-button {
+        width: 100%;
+      }
+    }
+  }
+}
+/* 添加拖拽区域样式 */
+.upload-dragger {
+  :deep(.el-upload-dragger) {
+    padding: 40px;
+    border-radius: 8px;
+    transition: border-color 0.3s;
+
+    &:hover {
+      border-color: #409eff !important;
+    }
+  }
+
+  .upload-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+
+    .upload-text {
+      text-align: center;
+      p {
+        margin: 0;
+        color: #606266;
+      }
+
+      .upload-tip {
+        font-size: 12px;
+        color: #909399;
+      }
+    }
+  }
+}
+/* 表格优化 */
+.custom-table {
+  .el-table__header th {
+    background-color: #f5f7fa !important;
+    font-weight: 600;
+  }
+
+  .el-table__fixed-right {
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* 分页容器 */
+.pagination-container {
+  margin-top: 16px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+.status-filters {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.status-tag {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: 1px solid #dcdfe6;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #409eff;
+    box-shadow: 0 2px 6px rgba(32, 160, 255, 0.1);
+  }
+
+  &.active {
+    border-color: currentColor;
+    background-color: rgba(64, 158, 255, 0.1);
+
+    .status-dot {
+      background: currentColor;
+      box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.2);
+    }
+
+    &.status-待审核 { color: #e6a23c; }
+    &.status-已通过 { color: #67c23a; }
+    &.status-已驳回 { color: #f56c6c; }
+  }
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: transparent;
+  margin-right: 6px;
+  transition: all 0.2s ease;
+}
+
+.status-label {
+  font-size: 13px;
+  color: #606266;
+}
+
+.active .status-label {
+  color: inherit;
+  font-weight: 500;
 }
 </style>

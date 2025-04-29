@@ -40,10 +40,13 @@
       <el-table-column prop="locationName" label="仓库位置" min-width="150" />
       <el-table-column prop="manufacturer" label="生产厂家" min-width="150" />
       <el-table-column prop="unit" label="单位" width="100" />
-      <!-- 在el-form中添加隐藏的status字段 -->
-      <el-form-item label="状态" prop="status" v-show="false">
-        <el-input v-model="formData.status" />
-      </el-form-item>
+      <el-table-column prop="status" label="库存状态" width="120" align="center">
+        <template #default="{row}">
+          <el-tag :type="row.status === '在库' ? 'success' : 'info'">
+            {{ row.status }}
+          </el-tag>
+        </template>
+      </el-table-column>
 
       <!-- 操作列 -->
       <el-table-column label="操作" width="220" align="center" fixed="right">
@@ -150,6 +153,20 @@
         <el-form-item label="单位" prop="unit">
           <el-input v-model="formData.unit" placeholder="请输入单位" />
         </el-form-item>
+        <el-form-item label="库存状态" prop="status">
+          <el-select
+              v-model="formData.status"
+              placeholder="请选择库存状态"
+              style="width: 100%"
+          >
+            <el-option
+                v-for="item in statusOption1s"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
 
       </el-form>
 
@@ -175,7 +192,12 @@ const categoryOptions = [
   { value: '电子类', label: '电子类' },
   { value: '其他', label: '其他' }
 ]
+const statusOption1s = [
 
+  { value: '在库', label: '在库' },
+  { value: '出库', label: '出库' },
+  { value: '维修中', label: '维修中' }
+]
 const statusOptions = [
   { value: '新好件', label: '新好件' },
   { value: '修好件', label: '修好件' },
@@ -410,7 +432,17 @@ const clearSearch = () => {
     margin-left: 8px;
   }
 }
-
+/* 新增状态标签样式 */
+.status-tag {
+  &.in-stock {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+  &.out-stock {
+    background-color: #fff3e0;
+    color: #ef6c00;
+  }
+}
 .data-table {
   flex: 1;
   border-radius: 8px;

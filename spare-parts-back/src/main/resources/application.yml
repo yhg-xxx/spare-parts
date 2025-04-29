@@ -26,16 +26,16 @@ spring:
       enabled: true
       file-size-threshold: 2MB
 
-  web:
-    resources:
-      static-locations:
-        - classpath:/static/
-        - classpath:/public/
-        - file:${app.upload.path}  # ?????????
-
+  spring:
+    web:
+      resources:
+        static-locations:
+          - classpath:/static/
+          - classpath:/public/
+          - file:${app.upload.path}  # 确保路径变量正确解析
 app:
   upload:
-    path: ${UPLOAD_DIR:uploads}  # ???????????uploads???
+    path: ${UPLOAD_DIR:./uploads}  # 使用相对路径确保可移植性
 
 server:
   port: 8080

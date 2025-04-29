@@ -25,6 +25,7 @@ public interface Spare_partRepository extends JpaRepository<Spare_part, Integer>
             s.sn as sn,
             s.manufacturer as manufacturer,
             s.unit as unit,
+            s.status as status,
             s.locationId as locationId,
             w.locationName as locationName,
             w.location_code as locationCode
@@ -42,4 +43,5 @@ public interface Spare_partRepository extends JpaRepository<Spare_part, Integer>
             @Param("locationId") Integer locationId,
             @Param("partName") String partName);
 
+    boolean existsByPartNameAndSn(String partName, String sn);
 }

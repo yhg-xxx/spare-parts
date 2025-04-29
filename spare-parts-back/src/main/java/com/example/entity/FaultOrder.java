@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class FaultOrder {
 
     public enum WorkOrderStatus {
-        待处理, 处理中, 已验收, 已返厂, 已报废, 已关闭
+        待处理, 处理中, 待验收,已验收, 已返厂, 已报废, 已关闭
     }
 
     public enum ReviewResult {
@@ -24,7 +24,7 @@ public class FaultOrder {
     }
 
     public enum DisposalType {
-        返厂修, 报废
+        返厂修, 报废, 修好件
     }
 
     @Id
@@ -53,7 +53,7 @@ public class FaultOrder {
     @Column(name = "work_order_status", nullable = false, length = 20)
     private WorkOrderStatus workOrderStatus = WorkOrderStatus.待处理;
 
-    @Column(name = "repair_result", columnDefinition = "TEXT")
+    @Column(name = "repair_result")
     private String repairResult;
 
     @Column(name = "repair_by", length = 255)

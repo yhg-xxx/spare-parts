@@ -12,6 +12,7 @@ public interface SparePartWithWarehouseDTO {
     String getSn();
     String getManufacturer();
     String getUnit();
+    String getStatus();
 
     // 仓库字段（通过location_id关联）
     Integer getLocationId();       // 外键字段

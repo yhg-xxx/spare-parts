@@ -17,10 +17,25 @@
         一键驳回
       </el-button>
     </div>
-
+    <!-- 状态筛选组件 -->
+    <div class="status-filters">
+      <div
+          v-for="status in statusOptions"
+          :key="status.value"
+          class="status-tag"
+          :class="{
+      'active': selectedStatus.includes(status.value),
+      [`status-${status.value}`]: true
+    }"
+          @click="toggleStatus(status.value)"
+      >
+        <span class="status-dot"></span>
+        <span class="status-label">{{ status.label }}</span>
+      </div>
+    </div>
     <!-- 调拨记录列表 -->
     <el-table
-        :data="transferList"
+        :data="filteredTransferList"
         stripe
         style="width: 100%"
         @selection-change="handleSelectionChange"
@@ -70,7 +85,7 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import {ElMessage, ElMessageBox} from "element-plus";
 import axios from "axios";
 import router from "@/router.js";
@@ -179,7 +194,32 @@ const batchRejectTransfers = async () => {
     ElMessage.error('批量操作失败: ' + error.message);
   }
 };
+// 状态配置
+const statusOptions = [
+  { value: '待审核', label: '待审核', color: '#e6a23c' },
+  { value: '已通过', label: '已通过', color: '#67c23a' },
+  { value: '已驳回', label: '已驳回', color: '#f56c6c' }
+]
 
+// 选中状态数组
+const selectedStatus = ref([])
+
+// 切换选中状态
+const toggleStatus = (status) => {
+  const index = selectedStatus.value.indexOf(status)
+  if (index > -1) {
+    selectedStatus.value.splice(index, 1)
+  } else {
+    selectedStatus.value.push(status)
+  }
+}
+
+// 过滤后的数据
+const filteredTransferList = computed(() => {
+  if (selectedStatus.value.length === 0) return transferList.value
+  return transferList.value.filter(item =>
+      selectedStatus.value.includes(item.status))
+})
 // 处理批准操作 - 先弹出确认对话框
 const handleApprove = (transferId) => {
   ElMessageBox.confirm(
@@ -259,10 +299,96 @@ const getStatusTagType = (status) => {
       return 'info';
   }
 };
+// 添加状态计数方法
+const getStatusCount = computed(() => (status) => {
+  return transferList.value.filter(item => item.status === status).length
+})
 </script>
 
 <style scoped>
-.dialog-footer {
-  text-align: right;
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
 }
+
+.batch-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.status-filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: white;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ebeef5;
+}
+
+.status-tag {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: 1px solid #e4e7ed;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  &.active {
+    border-color: currentColor;
+    background-color: rgba(64, 158, 255, 0.08);
+
+    .status-dot {
+      background: currentColor;
+      box-shadow: 0 0 0 3px rgba(64,158,255,0.15);
+    }
+  }
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+  transition: all 0.2s ease;
+}
+
+.status-label {
+  font-size: 13px;
+  color: #606266;
+  font-weight: 500;
+}
+
+.status-count {
+  margin-left: 6px;
+  font-size: 12px;
+  color: #909399;
+  background: #f5f7fa;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+/* 状态颜色定制 */
+.status-待审核 { color: #e6a23c; }
+.status-已通过 { color: #67c23a; }
+.status-已驳回 { color: #f56c6c; }
+
+.active.status-待审核 { background: rgba(230, 162, 60, 0.08); }
+.active.status-已通过 { background: rgba(103, 194, 58, 0.08); }
+.active.status-已驳回 { background: rgba(245, 108, 108, 0.08); }
 </style>
+
