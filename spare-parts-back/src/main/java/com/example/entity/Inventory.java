@@ -19,6 +19,9 @@ public class Inventory {
     private String status;
     private String number;
 
+    @Column(name = "safety_stock")
+    private int safetyStock;
+
     // 必须添加无参构造函数
     public Inventory() {
     }
@@ -50,6 +53,14 @@ public class Inventory {
 
     public String getStatus() {
         return status;
+    }
+
+    public int getSafetyStock() {
+        return safetyStock;
+    }
+
+    public void setSafetyStock(int safetyStock) {
+        this.safetyStock = safetyStock;
     }
 
     public void setStatus(String status) {

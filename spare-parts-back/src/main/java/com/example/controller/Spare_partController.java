@@ -1,8 +1,8 @@
 package com.example.controller;
 
-import com.example.dao.Spare_partRepository;
+import com.example.dao.*;
 import com.example.dto.SparePartWithWarehouseDTO;
-import com.example.entity.Spare_part;
+import com.example.entity.*;
 import com.example.service.SparePartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -19,6 +19,20 @@ import java.util.*;
 public class Spare_partController {
     @Autowired
     private Spare_partRepository spare_partRepository;
+    @Autowired
+    private InboundRecordRepository inboundRecordRepository;
+
+    @Autowired
+    private FaultOrderRepository faultOrderRepository;
+
+    @Autowired
+    private StockoutRepository stockoutRepository;
+
+    @Autowired
+    private TransferRecordRepository transferRecordRepository;
+    @Autowired
+    private ReturnFactoryRepository returnFactoryRepository;
+
     //插入
     @PostMapping("/spare_part")
     public Spare_part createSpare_part(@RequestBody Spare_part spare_part) {
@@ -125,6 +139,53 @@ public class Spare_partController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(Collections.singletonMap("error", "服务器错误"));
+        }
+    }
+    @GetMapping("/lifecycle/{sn}")
+    public ResponseEntity<Map<String, Object>> getLifecycleInfo(@PathVariable String sn) {
+        Map<String, Object> result = new LinkedHashMap<>();
+
+        // 1. 获取基础信息
+        Spare_part part = spare_partRepository.findBySn(sn)
+                .orElseThrow(() -> new ResourceNotFoundException("Spare part not found"));
+        result.put("basicInfo", part);
+
+        // 2. 获取入库信息
+        inboundRecordRepository.findBySn(sn).ifPresent(
+                inbound -> result.put("inboundInfo", inbound)
+        );
+
+        // 3. 故障维修记录
+        List<FaultOrder> faults = faultOrderRepository.findBySn(sn);
+        if (!faults.isEmpty()) {
+            result.put("faultRecords", faults);
+        }
+
+        // 4. 出库记录
+        List<Stockout> stockouts = stockoutRepository.findBySn(sn);
+        if (!stockouts.isEmpty()) {
+            result.put("stockoutRecords", stockouts);
+        }
+
+        // 5. 调拨记录
+        List<TransferRecord> transfers = transferRecordRepository.findBySn(sn);
+        if (!transfers.isEmpty()) {
+            result.put("transferRecords", transfers);
+        }
+        // 6. 返厂记录
+        List<ReturnFactoryRecord> ReturnFactoryRecords = returnFactoryRepository.findBySn(sn);
+        if (!ReturnFactoryRecords.isEmpty()) {
+            result.put("returnFactoryRecords", ReturnFactoryRecords);
+        }
+
+
+        return ResponseEntity.ok(result);
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    static class ResourceNotFoundException extends RuntimeException {
+        public ResourceNotFoundException(String message) {
+            super(message);
         }
     }
 }

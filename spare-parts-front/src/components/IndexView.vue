@@ -31,26 +31,27 @@
                 <el-icon><FolderOpened /></el-icon>
                 <span>基础信息</span>
               </template>
-
+              <el-menu-item index="/view/sparepart">
+                <el-icon><Collection /></el-icon>
+                <span>备件信息</span>
+              </el-menu-item>
               <el-menu-item index="/view/warehouse">
                 <el-icon><MapLocation /></el-icon>
                 <span>仓库信息</span>
               </el-menu-item>
 
-              <el-menu-item index="/view/sparepart">
-                <el-icon><Collection /></el-icon>
-                <span>备件信息</span>
-              </el-menu-item>
 
-              <el-menu-item index="/view/inventory">
-                <el-icon><Box /></el-icon>
-                <span>库存管理</span>
-              </el-menu-item>
+
             </el-sub-menu>
           </el-menu>
           <router-link to="/view/purchase" class="menu-item">
             <el-icon><Goods /></el-icon>
             <span class="menu-text">采购管理</span>
+          </router-link>
+
+          <router-link to="/view/inventory" class="menu-item">
+            <el-icon><Box /></el-icon>
+            <span class="menu-text">库存管理</span>
           </router-link>
           <el-menu
               router
@@ -96,6 +97,10 @@
             <el-icon><Document /></el-icon>
             <span class="menu-text">备件工单</span>
           </router-link>
+          <router-link to="/view/ReturnFactoryManagement" class="menu-item">
+            <el-icon><Refresh /></el-icon>
+            <span class="menu-text">返厂记录</span>
+          </router-link>
 
           <!-- 新增退出登录 -->
           <div class="logout-item" @click="handleLogout">
@@ -122,22 +127,22 @@
                 <span>基础信息</span>
               </template>
 
-              <el-menu-item index="/view/warehouse">
-                <el-icon><MapLocation /></el-icon>
-                <span>仓库信息</span>
-              </el-menu-item>
-
               <el-menu-item index="/view/sparepart">
                 <el-icon><Collection /></el-icon>
                 <span>备件信息</span>
               </el-menu-item>
 
-              <el-menu-item index="/view/inventory">
-                <el-icon><Box /></el-icon>
-                <span>库存管理</span>
+
+              <el-menu-item index="/view/warehouse">
+                <el-icon><MapLocation /></el-icon>
+                <span>仓库信息</span>
               </el-menu-item>
             </el-sub-menu>
           </el-menu>
+            <router-link to="/view/inventory" class="menu-item">
+              <el-icon><Box /></el-icon>
+              <span class="menu-text">库存管理</span>
+            </router-link>
             <!-- 调拨审核 -->
             <router-link to="/view/transferManagement1" class="menu-item">
               <el-icon><Connection /></el-icon>
@@ -196,10 +201,12 @@ import {
   MapLocation,
   Collection,
   Tickets,
-  RefreshLeft, SwitchButton, FolderOpened, Tools, Document
+  RefreshLeft, SwitchButton, FolderOpened, Tools, Document, Refresh
 } from "@element-plus/icons-vue";
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import {ElMessage} from "element-plus";
+import axios from "axios";
 
 const router = useRouter();
 
@@ -217,17 +224,28 @@ const handleLogout = () => {
 };
 
 // 用户信息初始化
+// 修改onMounted逻辑
 onMounted(async () => {
   try {
-    // 添加延迟确保sessionStorage写入
-    await new Promise(resolve => setTimeout(resolve, 50));
-    userData.value = JSON.parse(sessionStorage.getItem('user')) || {};
+    await new Promise(resolve => setTimeout(resolve, 50))
+    userData.value = JSON.parse(sessionStorage.getItem('user')) || {}
+
+    // 首次加载时检查库存
+    if (userData.value.role === '库管员') {
+      const { data } = await axios.get('/inventory/low-stock', {
+        withCredentials: true
+      })
+
+      if (data.length > 0) {
+        ElMessage.warning(`您有${data.length}项库存需要处理`)
+      }
+    }
   } catch (e) {
-    userData.value = {};
+    userData.value = {}
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-});
+})
 
 // 计算属性包装
 const user = computed(() => userData.value);

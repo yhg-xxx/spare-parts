@@ -19,6 +19,8 @@ public interface StockoutRepository extends JpaRepository<Stockout, Integer> {
 
 
     List<Stockout> findByStatusIn(List<String> statuses);
+
+    List<Stockout> findBySn(String sn);
 }
 
 

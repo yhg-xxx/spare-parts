@@ -313,8 +313,8 @@
 
 <script setup>
 /* 模块导入 */
-import { ref, reactive, onMounted, watch, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
+import {ref, reactive, onMounted, watch, nextTick} from 'vue'
+import {ElMessage} from 'element-plus'
 import axios from "axios"
 import router from "@/router.js"
 
@@ -357,9 +357,9 @@ const acceptanceForm = reactive({
   reviewResult: ''
 })
 const disposalTypes = ref([
-  { label: '修好件', value: '修好件' },
-  { label: '报废', value: '报废' },
-  { label: '返厂修', value: '返厂修' }
+  {label: '修好件', value: '修好件'},
+  {label: '报废', value: '报废'},
+  {label: '返厂修', value: '返厂修'}
 ])
 
 /* 常量定义 */
@@ -373,7 +373,7 @@ const request = axios.create({
 
 /* API配置 */
 const api = {
-  getList: (params) => request.get('/fault-orders', { params }),
+  getList: (params) => request.get('/fault-orders', {params}),
   create: (data) => request.post('/fault-orders', data),
   update: (id, data) => request.put(`/fault-orders/${id}`, data),
   getDetail: (id) => request.get(`/fault-orders/${id}`),
@@ -382,7 +382,7 @@ const api = {
     const formData = new FormData()
     formData.append('file', file)
     return request.post('/files/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: {'Content-Type': 'multipart/form-data'}
     })
   }
 }
@@ -461,8 +461,8 @@ const initCamera = async () => {
     const constraints = {
       video: {
         facingMode: cameraFacingMode.value,
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
+        width: {ideal: 1280},
+        height: {ideal: 720}
       }
     }
 
@@ -516,7 +516,12 @@ const capturePhoto = async () => {
         config
     )
 
-    handleUploadSuccess(response.data)
+    if (response.data.code === 200) {
+      uploadedImage.value = response.data.url
+      ElMessage.success('照片上传成功')
+    } else {
+      ElMessage.error(response.data.msg || '照片上传失败')
+    }
   } catch (error) {
     ElMessage.error(`上传失败：${error.response?.data?.msg || error.message}`)
   }
@@ -589,7 +594,7 @@ const handleRowClick = async (row) => {
     ElMessage.error('获取详情失败')
   }
 }
-const handleAccept = async  (row, event) => {
+const handleAccept = async (row, event) => {
   event.stopPropagation()
   try {
     await api.accept(row.faultId, {  // 调用更新接口
@@ -601,7 +606,31 @@ const handleAccept = async  (row, event) => {
     ElMessage.error('操作失败')
   }
 }
+/* 新增上传成功处理 */
+const handleUploadSuccess = (response) => {
+  if (response.code === 200) {
+    uploadedImage.value = response.url
+    ElMessage.success('图片上传成功')
+  } else {
+    ElMessage.error(response.msg || '图片上传失败')
+  }
+}
 
+/* 新增上传前校验 */
+const beforeUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt5M = file.size / 1024 / 1024 < 5
+
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件')
+    return false
+  }
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过5MB')
+    return false
+  }
+  return true
+}
 /* 监听器 */
 watch(reviewDialogVisible, (val) => {
   if (val && uploadMode.value === 'camera') {
@@ -647,6 +676,7 @@ request.interceptors.response.use(
   background-color: #f0faff; /* 更明亮的背景色 */
   margin: 12px 0 8px; /* 增加上下间距 */
 }
+
 .section-title {
   font-weight: 600;
   font-size: 15px; /* 增大字号 */
@@ -659,6 +689,7 @@ request.interceptors.response.use(
   border-radius: 4px; /* 圆角 */
   box-shadow: 0 2px 4px rgba(24, 144, 255, 0.1); /* 添加浅色阴影 */
 }
+
 /* 标题文字装饰 */
 .title-text {
   position: relative;
@@ -676,10 +707,12 @@ request.interceptors.response.use(
   background: #1890ff;
   border-radius: 2px;
 }
+
 /* 调整描述项标签对齐 */
 :deep(.el-descriptions__body .el-descriptions-item__cell) {
   padding: 12px;
 }
+
 /* 图片错误提示 */
 .image-error {
   display: flex;
@@ -699,6 +732,7 @@ request.interceptors.response.use(
   margin-top: 8px;
   text-align: center;
 }
+
 /* 新增摄像头区域样式 */
 .camera-container {
   max-width: 600px;

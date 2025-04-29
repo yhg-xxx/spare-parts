@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface InboundRecordRepository extends
         JpaRepository<InboundRecord, Integer>,
@@ -15,4 +17,5 @@ public interface InboundRecordRepository extends
     List<InboundRecord> findByOrderId(Integer orderId);
 
 
+    Optional<Object> findBySn(String sn);
 }

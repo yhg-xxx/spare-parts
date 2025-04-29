@@ -66,6 +66,10 @@ const router = createRouter({
                         path: 'ReturnAudit',
                         name: 'ReturnAudit',
                         component: () => import('@/components/ReturnAudit.vue'),
+                    },{
+                        path: 'ReturnFactoryManagement',
+                        name: 'ReturnFactoryManagement',
+                        component: () => import('@/components/ReturnFactoryManagement.vue'),
                     },
             ]
             }

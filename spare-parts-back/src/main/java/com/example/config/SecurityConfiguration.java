@@ -27,6 +27,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/inventory/**").permitAll()
                         .requestMatchers("/spare_part/**").permitAll()
+                        .requestMatchers("/lifecycle/**").permitAll()
 
                 )
                 .csrf(AbstractHttpConfigurer::disable)
