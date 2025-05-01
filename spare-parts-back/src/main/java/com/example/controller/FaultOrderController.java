@@ -87,7 +87,12 @@ public class FaultOrderController {
                         )
                 );
             }
-
+// 处理验收结果
+            if (updates.containsKey("reviewResult")) {
+                existingOrder.setReviewResult(
+                        FaultOrder.ReviewResult.valueOf((String) updates.get("reviewResult"))
+                );
+            }
             // 更新维修结果（图片URL）
             if (updates.containsKey("repairResult")) {
                 existingOrder.setRepairResult((String) updates.get("repairResult"));

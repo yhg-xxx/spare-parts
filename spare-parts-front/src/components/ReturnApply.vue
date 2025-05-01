@@ -34,7 +34,31 @@
         批量返还申请（{{ selectedItems.length }}）
       </el-button>
     </div>
-
+    <!-- 新增的返还申请记录表格 -->
+    <div class="mt-6">
+      <h3 class="mb-4 text-lg font-semibold">我的返还申请记录</h3>
+      <el-table
+          :data="returnApplications"
+          stripe
+          style="width: 100%"
+      >
+        <el-table-column prop="id" label="申请单号" />
+        <el-table-column prop="partName" label="备件名称" />
+        <el-table-column prop="sn" label="SN码" />
+        <el-table-column label="申请时间">
+          <template #default="{row}">
+            {{ formatDate(row.outTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="处理状态">
+          <template #default="{row}">
+            <el-tag :type="getStatusTagType(row.status)">
+              {{ row.status }}
+            </el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
     <!-- 返还申请对话框 -->
     <el-dialog v-model="returnDialogVisible" title="备件返还申请">
       <el-form :model="returnForm">
@@ -178,4 +202,27 @@ const openReturnDialog = () => {
   if (selectedItems.value.length === 0) return
   returnDialogVisible.value = true
 }
+// 新增计算属性 - 返还申请记录
+const returnApplications = computed(() => {
+  if (!currentUser.value?.user_id) return []
+
+  return stockouts.value.filter(item =>
+      item.operatorId === currentUser.value.user_id &&
+      (
+          /^返还审核-/.test(item.status) ||  // 包含所有返还审核状态
+          item.status === '已入库'            // 包含已入库状态
+      )
+  )
+})
+// 新增状态标签类型方法
+const getStatusTagType = (status) => {
+  const statusMap = {
+    '返还审核-修好件': 'success',
+    '返还审核-新好件': '',
+    '返还审核-坏件': 'danger',
+    '已入库': 'success'  // 新增已入库状态颜色
+  }
+  return statusMap[status] || 'info'
+}
+
 </script>

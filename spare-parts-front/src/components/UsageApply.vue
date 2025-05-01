@@ -125,6 +125,7 @@ onMounted(async () => {
     return;
   }
   currentUser.value = user;
+
   await fetchStockouts();  // 先获取出库记录
   await fetchUsageRequests();
 });

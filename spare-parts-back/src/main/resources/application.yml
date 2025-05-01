@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/parts
+    url: jdbc:mysql://localhost:3306/parts2
     username: root
     password: 123456
 
@@ -21,21 +21,21 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 20MB
+      max-file-size: 20MB     # 单个文件最大20MB
+      max-request-size: 30MB  # 总请求最大30MB（需大于等于max-file-size）
       enabled: true
       file-size-threshold: 2MB
 
-  spring:
-    web:
-      resources:
-        static-locations:
-          - classpath:/static/
-          - classpath:/public/
-          - file:${app.upload.path}  # 确保路径变量正确解析
+  web:
+    resources:
+      static-locations:
+        - classpath:/static/
+        - classpath:/public/
+        - file:${app.upload.path}
+
 app:
   upload:
-    path: ${UPLOAD_DIR:./uploads}  # 使用相对路径确保可移植性
+    path: ${UPLOAD_DIR:./uploads}
 
 server:
   port: 8080

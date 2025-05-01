@@ -32,6 +32,8 @@ public class Spare_partController {
     private TransferRecordRepository transferRecordRepository;
     @Autowired
     private ReturnFactoryRepository returnFactoryRepository;
+    @Autowired
+    private ScrapRecordRepository scrapRecordRepository;
 
     //插入
     @PostMapping("/spare_part")
@@ -177,6 +179,11 @@ public class Spare_partController {
         if (!ReturnFactoryRecords.isEmpty()) {
             result.put("returnFactoryRecords", ReturnFactoryRecords);
         }
+
+        // 新增报废记录查询
+        scrapRecordRepository.findBySn(sn).ifPresent(
+                scrap -> result.put("scrapRecord", scrap)
+        );
 
 
         return ResponseEntity.ok(result);

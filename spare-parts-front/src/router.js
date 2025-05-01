@@ -70,6 +70,19 @@ const router = createRouter({
                         path: 'ReturnFactoryManagement',
                         name: 'ReturnFactoryManagement',
                         component: () => import('@/components/ReturnFactoryManagement.vue'),
+                    },{
+                        path: 'ScrapReview',
+                        name: 'ScrapReview',
+                        component: () => import('@/components/ScrapReview.vue'),
+                    },{
+                        path: 'ScrapApply',
+                        name: 'ScrapApply',
+                        component: () => import('@/components/ScrapApply.vue'),
+                    },{
+                        path: 'stockout-detail/:id',  // 修复1：添加动态路由参数
+                        name: 'StockoutDetail',
+                        component: () => import('@/components/StockoutDetail.vue'),
+                        props: true  // 修复2：启用 props 接收路由参数
                     },
             ]
             }

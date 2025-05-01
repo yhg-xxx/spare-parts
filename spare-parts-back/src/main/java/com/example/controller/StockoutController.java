@@ -74,9 +74,7 @@ public class StockoutController {
         return ResponseEntity.ok(stockoutService.createBatch(stockouts));
     }
 
-    // StockoutController.java
-    // StockoutController.java 修改 /all 接口
-    // StockoutController.java
+
     @GetMapping("/all")
     public ResponseEntity<List<Stockout>> getAllStockouts(
             @RequestParam(required = false) List<String> status) { // 改为接收List

@@ -11,6 +11,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
+
 
 @Configuration
 public class SecurityConfiguration {
@@ -28,6 +30,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/inventory/**").permitAll()
                         .requestMatchers("/spare_part/**").permitAll()
                         .requestMatchers("/lifecycle/**").permitAll()
+                        .requestMatchers("/scrapRecord/**").permitAll()
 
                 )
                 .csrf(AbstractHttpConfigurer::disable)
@@ -38,7 +41,11 @@ public class SecurityConfiguration {
         CorsConfiguration cors = new CorsConfiguration();
         // 指定允许的具体来源，例如前端开发服务器的地址
         cors.addAllowedOrigin("http://localhost:5173");
+        cors.addAllowedOrigin("http://localhost:8080");
         cors.setAllowCredentials(true); // 如果前端携带凭证则设为true
+        cors.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
         cors.addAllowedHeader("*");
         cors.addAllowedMethod("*");
         cors.addExposedHeader("*");
@@ -46,6 +53,6 @@ public class SecurityConfiguration {
         source.registerCorsConfiguration("/**", cors);
         return source;
     }
-    }
+}
 
 

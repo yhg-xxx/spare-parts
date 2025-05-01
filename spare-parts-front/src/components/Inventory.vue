@@ -161,6 +161,37 @@
               </el-table-column>
             </el-table>
           </el-collapse-item>
+          <!-- 报废记录 -->
+          <el-collapse-item title="报废记录" name="scrap">
+            <el-descriptions :column="2" border v-if="lifecycleData.scrapRecord">
+              <el-descriptions-item label="报废单号">{{ lifecycleData.scrapRecord.orderId }}</el-descriptions-item>
+              <el-descriptions-item label="申请时间">{{ formatDateTime(lifecycleData.scrapRecord.applyTime) }}</el-descriptions-item>
+              <el-descriptions-item label="报废原因">{{ lifecycleData.scrapRecord.scrapReason }}</el-descriptions-item>
+              <el-descriptions-item label="处置方式">{{ lifecycleData.scrapRecord.disposalMethod }}</el-descriptions-item>
+              <el-descriptions-item label="执行人">{{ lifecycleData.scrapRecord.executor }}</el-descriptions-item>
+              <el-descriptions-item label="执行时间">{{ formatDateTime(lifecycleData.scrapRecord.scrapTime) }}</el-descriptions-item>
+              <el-descriptions-item label="当前状态">
+                <el-tag :type="getScrapStatusTagType(lifecycleData.scrapRecord.partStatus)">
+                  {{ lifecycleData.scrapRecord.partStatus }}
+                </el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="损坏照片" :span="2">
+                <div class="damage-photos">
+                  <el-image
+                      :src="lifecycleData.scrapRecord.damagePhoto"
+                      :preview-src-list="[lifecycleData.scrapRecord.damagePhoto]"
+                      fit="cover"
+                      class="photo-thumbnail"
+                  >
+                    <template #error>
+                      <div class="image-error">图片加载失败</div>
+                    </template>
+                  </el-image>
+                </div>
+              </el-descriptions-item>
+            </el-descriptions>
+            <el-empty v-else description="无报废记录" />
+          </el-collapse-item>
         </el-collapse>
       </el-card>
     </div>
@@ -256,7 +287,15 @@ import router from "@/router.js";
 import {Close, Plus, Search} from "@element-plus/icons-vue";
 // 在script setup部分添加
 import dayjs from 'dayjs'
-
+// 在setup()中添加
+const getScrapStatusTagType = (status) => {
+  const statusMap = {
+    '待审核': 'warning',
+    '已报废': 'success',
+    '驳回': 'danger'
+  }
+  return statusMap[status] || 'info'
+}
 const formatDateTime = (value) => {
   if (!value) return '无记录'
   return dayjs(value).format('YYYY-MM-DD HH:mm:ss')
@@ -307,23 +346,26 @@ const handleSnSearch = async () => {
         detail: `采购单号：${lifecycleData.value.inboundInfo.orderId}`
       }] : []),
 
-      ...(lifecycleData.value.returnFactoryRecords.map(r => ({
+      // 返厂出库记录（使用安全访问）
+      ...(lifecycleData.value.returnFactoryRecords?.map(r => ({
         time: r.sentTime,
         type: '返厂出库',
         detail: `返厂单号：RT-${r.returnId}`
-      })) || []),
+      })) ?? []), // 使用空数组作为fallback
 
-      ...(lifecycleData.value.returnFactoryRecords.map(r => ({
+      // 返厂入库记录（使用安全访问）
+      ...(lifecycleData.value.returnFactoryRecords?.map(r => ({
         time: r.actualReturnTime,
         type: '返厂入库',
         detail: `返厂单号：RT-${r.returnId}`
-      })) || []),
+      })) ?? []),
 
-      ...(lifecycleData.value.transferRecords.map(t => ({
+      // 调拨出库记录（使用安全访问）
+      ...(lifecycleData.value.transferRecords?.map(t => ({
         time: t.createdAt,
         type: '调拨出库',
         detail: `调拨单号：T-${t.transferId}`
-      })) || [])
+      })) ?? [])
     ].sort((a, b) => new Date(b.time) - new Date(a.time));
 
   } catch (error) {
@@ -675,7 +717,34 @@ const checkLowStock = async () => {
     }
   }
 }
+/* 损坏照片样式 */
+.damage-photos {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
+.photo-thumbnail {
+  width: 200px;
+  height: 150px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.3s;
+
+  &:hover {
+    transform: translateY(-3px);
+  }
+}
+
+.image-error {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+  color: #909399;
+}
 /* 响应式表格调整 */
 @media (max-width: 768px) {
   .el-table.return-table {

@@ -101,6 +101,10 @@
             <el-icon><Refresh /></el-icon>
             <span class="menu-text">返厂记录</span>
           </router-link>
+          <router-link to="/view/ScrapReview" class="menu-item">
+            <el-icon><WarnTriangleFilled /></el-icon>
+            <span class="menu-text">报废审核</span>
+          </router-link>
 
           <!-- 新增退出登录 -->
           <div class="logout-item" @click="handleLogout">
@@ -175,6 +179,10 @@
             <el-icon><Tools /></el-icon>
             <span class="menu-text">维修管理</span>
           </router-link>
+          <router-link to="/view/ScrapApply" class="menu-item">
+            <el-icon><WarnTriangleFilled /></el-icon>
+            <span class="menu-text">报废申请</span>
+          </router-link>
           <!-- 新增退出登录 -->
           <div class="logout-item" @click="handleLogout">
             <el-icon><SwitchButton /></el-icon>
@@ -201,7 +209,7 @@ import {
   MapLocation,
   Collection,
   Tickets,
-  RefreshLeft, SwitchButton, FolderOpened, Tools, Document, Refresh
+  RefreshLeft, SwitchButton, FolderOpened, Tools, Document, Refresh, WarnTriangleFilled
 } from "@element-plus/icons-vue";
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
