@@ -26,7 +26,8 @@
     >
       <el-table-column prop="partId" label="ID" width="80" align="center" />
       <el-table-column prop="partName" label="备件名称" min-width="120" />
-      <el-table-column prop="partModel" label="型号规格" min-width="150" />
+      <el-table-column prop="partModel" label="型号规格" min-width="120" />
+      <el-table-column prop="sn" label="SN号" width="170" align="center" />
       <el-table-column prop="category" label="分类" width="120">
         <template #default="{row}">
           <el-tag type="info">{{ row.category }}</el-tag>
@@ -37,10 +38,9 @@
           <el-tag :type="statusTagType(row.sparePartStatus)">{{ row.sparePartStatus }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="locationName" label="仓库位置" min-width="150" />
-      <el-table-column prop="manufacturer" label="生产厂家" min-width="150" />
-      <el-table-column prop="unit" label="单位" width="100" />
-      <el-table-column prop="status" label="库存状态" width="120" align="center">
+      <el-table-column prop="locationName" label="仓库位置" min-width="100" />
+      <el-table-column prop="manufacturer" label="生产厂家" min-width="100" />
+      <el-table-column prop="status" label="库存状态" width="100" align="center">
         <template #default="{row}">
           <el-tag :type="row.status === '在库' ? 'success' : 'info'">
             {{ row.status }}

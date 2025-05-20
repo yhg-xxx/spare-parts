@@ -202,7 +202,7 @@ const statusOptions = [
 ]
 
 // 选中状态数组
-const selectedStatus = ref([])
+const selectedStatus = ref(['待审核'])
 
 // 切换选中状态
 const toggleStatus = (status) => {

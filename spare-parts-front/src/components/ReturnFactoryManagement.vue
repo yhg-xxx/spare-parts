@@ -148,6 +148,7 @@
           <el-date-picker
               v-model="logisticsForm.sentTime"
               type="datetime"
+
               placeholder="选择发出时间">
           </el-date-picker>
         </el-form-item>
@@ -228,6 +229,13 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import axios from 'axios' // 添加axios导入
+import { onBeforeUnmount } from 'vue'
+
+const abortController = new AbortController()
+
+onBeforeUnmount(() => {
+  abortController.abort() // 取消所有进行中的请求
+})
 
 // 搜索表单
 const searchForm = reactive({
@@ -495,7 +503,7 @@ const submitLogisticsForm = async () => {
     const params = new URLSearchParams()
     params.append('logisticsCompany', logisticsForm.logisticsCompany)
     params.append('logisticsNumber', logisticsForm.logisticsNumber)
-    params.append('sentTime', logisticsForm.sentTime.toISOString())
+    params.append('sentTime', formatDateTime(logisticsForm.sentTime))
 
     const res = await axios.put(
         `/api/return-factory/${currentRow.value.returnId}/logistics`,
@@ -541,7 +549,7 @@ const submitResultForm = async () => {
     const params = new URLSearchParams()
     params.append('repairResult', resultForm.repairResult)
     params.append('repairDescription', resultForm.repairDescription)
-    params.append('actualReturnTime', resultForm.actualReturnTime.toISOString())
+    params.append('actualReturnTime',formatDateTime (resultForm.actualReturnTime))
 
     const res = await axios.put(
         `/api/return-factory/${currentRow.value.returnId}/result`,
@@ -712,14 +720,20 @@ const formatDate = (dateStr) => {
   }
 }
 
-const formatDateTime = (dateStr) => {
-  if (!dateStr) return '--'
-  try {
-    const date = new Date(dateStr)
-    return isNaN(date.getTime()) ? '--' : date.toLocaleString()
-  } catch (e) {
-    return '--'
-  }
+const formatDateTime = (dateInput) => {
+  // 处理空值
+  if (!dateInput) return ''
+
+  // 如果是字符串则转换为 Date
+  const date = typeof dateInput === 'string'
+      ? new Date(dateInput)
+      : dateInput
+
+  // 检查有效性
+  if (isNaN(date.getTime())) return ''
+
+  const pad = num => num.toString().padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
 }
 
 // 分页变化

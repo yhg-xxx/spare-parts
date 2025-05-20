@@ -38,10 +38,17 @@ public class FaultOrderController {
     @PostMapping
     public ResponseEntity<?> createFaultOrder(@RequestBody FaultOrder newOrder) {
         try {
+            // 自动设置故障时间为当前时间
+            newOrder.setFaultTime(LocalDateTime.now());
+
+            // 设置其他系统字段
+            newOrder.setCreatedAt(LocalDateTime.now());
+            newOrder.setWorkOrderStatus(FaultOrder.WorkOrderStatus.待处理);
+
             FaultOrder savedOrder = faultOrderRepository.save(newOrder);
-            return new ResponseEntity<>(savedOrder, HttpStatus.CREATED); // HTTP 201
+            return new ResponseEntity<>(savedOrder, HttpStatus.CREATED);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("创建失败: " + e.getMessage()); // HTTP 400
+            return ResponseEntity.badRequest().body("创建失败: " + e.getMessage());
         }
     }
     // 查询单个故障工单详情

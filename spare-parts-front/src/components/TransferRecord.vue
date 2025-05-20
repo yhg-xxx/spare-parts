@@ -323,7 +323,7 @@ const fetchWarehouseList = async () => {
 // 修改后的获取备件列表方法
 const fetchPartList = async () => {
   try {
-    const res = await axios.get("http://localhost:8080/spare_part");
+    const res = await axios.get("http://localhost:8080/spare_part/x");
     const data = res.data.content || res.data;
 
     // 使用Map实现去重（保留第一个出现的记录）

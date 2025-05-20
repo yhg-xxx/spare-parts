@@ -181,6 +181,16 @@
             />
           </el-select>
         </el-form-item>
+
+        <el-form-item label="故障时间" required>
+          <el-date-picker
+              v-model="formData.faultTime"
+              type="datetime"
+              placeholder="选择故障时间"
+              format="YYYY-MM-DD HH:mm:ss"
+              value-format="YYYY-MM-DD HH:mm:ss"
+          />
+        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -329,13 +339,15 @@ import {ref, reactive, onMounted, watch, nextTick} from 'vue'
 import {ElMessage} from 'element-plus'
 import axios from "axios"
 import router from "@/router.js"
+import dayjs from "dayjs";
 
 /* 响应式状态 - 数据相关 */
 const tableData = ref([])
 const formData = reactive({
   sn: '',
   faultDescription: '',
-  workOrderStatus: ''
+  workOrderStatus: '',
+  faultTime:'',
 })
 const currentDetail = ref({})
 const currentUser = ref(null)
@@ -370,7 +382,6 @@ const acceptanceForm = reactive({
 })
 const disposalTypes = ref([
   {label: '修好件', value: '修好件'},
-  {label: '报废', value: '报废'},
   {label: '返厂修', value: '返厂修'}
 ])
 
@@ -456,14 +467,22 @@ const resetForm = () => Object.assign(formData, {
 /* 表单提交 */
 const submitForm = async () => {
   try {
+    // 转换时间格式
+    const payload = {
+      ...formData,
+      faultTime: dayjs(formData.faultTime).format('YYYY-MM-DD HH:mm:ss'),
+      sn: formData.sn // 确保SN号存在
+    }
+
     isEdit.value
-        ? await api.update(formData.faultId, formData)
-        : await api.create(formData)
+        ? await api.update(formData.faultId, payload)
+        : await api.create(payload)
+
     ElMessage.success('操作成功')
     dialogVisible.value = false
     await loadData()
-  } catch {
-    ElMessage.error('操作失败')
+  } catch (error) {
+    ElMessage.error('操作失败: ' + error.message)
   }
 }
 

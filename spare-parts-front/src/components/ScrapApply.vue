@@ -2,7 +2,7 @@
   <div class="scrap-apply-container">
     <el-card class="apply-form">
       <h2>备件报废申请</h2>
-      <el-form ref="form" :model="form" label-width="120px">
+      <el-form ref="form" :model="form" :rules="rules" label-width="120px">
         <!-- SN号输入 -->
         <el-form-item label="备件SN号" prop="sn" required>
           <el-input
@@ -29,12 +29,15 @@
               :auto-upload="false"
               :on-change="handlePhotoChange"
               :show-file-list="false"
+              :class="{ 'is-invalid': !photoFile }"
           >
             <el-button size="small" type="primary">点击上传</el-button>
             <span v-if="photoFile" class="photo-name">
               {{ photoFile.name }}
+              <el-icon @click.stop="removePhoto"><Close /></el-icon>
             </span>
           </el-upload>
+
         </el-form-item>
 
         <el-form-item>
@@ -93,16 +96,38 @@
 <script>
 import axios from 'axios';
 import { ElMessage, ElLoading } from 'element-plus';
-import { Picture } from '@element-plus/icons-vue';
+import {Close, Picture} from '@element-plus/icons-vue';
 
 export default {
   name: 'ScrapApply',
+  components: {Close},
   data() {
+    // 自定义照片验证规则
+    const validatePhoto = (rule, value, callback) => {
+      if (!this.photoFile) {
+        callback(new Error('必须上传现场照片'));
+      } else {
+        callback();
+      }
+    };
+
+
     return {
       form: {
         sn: '',
         scrapReason: '',
 
+      },
+      rules: {
+        sn: [
+          { required: true, message: '请输入备件SN号', trigger: 'blur' }
+        ],
+        scrapReason: [
+          { required: true, message: '请输入报废原因', trigger: 'blur' }
+        ],
+        damagePhoto: [
+          { validator: validatePhoto, trigger: 'change' }
+        ]
       },
       photoFile: null,
       isSubmitting: false,
@@ -201,6 +226,13 @@ export default {
       if (!this.currentUser) return;
 
       try {
+        // 先进行表单验证
+        await this.$refs.form.validate();
+
+        if (!this.photoFile) {
+          this.$message.error('请上传现场照片');
+          return;
+        }
         this.isSubmitting = true;
         const formData = new FormData();
         formData.append('sn', this.form.sn);
@@ -226,6 +258,11 @@ export default {
       } finally {
         this.isSubmitting = false;
       }
+    },
+
+    removePhoto() {
+      this.photoFile = null;
+      this.$refs.form.validateField('damagePhoto');
     },
 
     // 重置表单
@@ -255,5 +292,31 @@ export default {
 .photo-name {
   margin-left: 10px;
   color: #666;
+}
+.is-invalid {
+  :deep(.el-upload) {
+    border: 1px solid #f56c6c;
+    border-radius: 6px;
+  }
+}
+
+.photo-name {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+
+  .el-icon {
+    margin-left: 5px;
+    color: #999;
+    cursor: pointer;
+
+    &:hover {
+      color: #f56c6c;
+    }
+  }
+}
+
+.el-form-item__error {
+  margin-top: 5px;
 }
 </style>

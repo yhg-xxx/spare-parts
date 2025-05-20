@@ -50,7 +50,7 @@
               </el-tag>
             </div>
             <el-text type="info" class="update-time">
-              最后更新：{{ formatDateTime(lifecycleData.inboundInfo?.createdAt) }}
+              最后更新：{{ getLatestUpdateTime() || '无可用记录' }}
             </el-text>
           </div>
         </template>
@@ -95,10 +95,13 @@
               <el-timeline-item
                   v-for="(record, index) in lifecycleData.inoutRecords"
                   :key="index"
-                  :timestamp="record.time"
+                  :timestamp="formatDateTime(record.time)"
                   placement="top"
               >
-                <el-tag :type="record.type === '出库' ? 'danger' : 'success'">
+                <el-tag
+                    :type="getInoutTagType(record.type)"
+                    :class="['record-tag', record.type.toLowerCase()]"
+                >
                   {{ record.type }}
                 </el-tag>
                 {{ record.detail }}
@@ -131,13 +134,14 @@
             >
               <el-table-column prop="sentTime" label="发送时间" width="180">
                 <template #default="{row}">
-                  {{ formatDateTime(row.sentTime) }}
+                  {{ convertStockoutTime(row.sentTime) }}
                 </template>
               </el-table-column>
 
+              <!-- 返厂时间 -->
               <el-table-column prop="actualReturnTime" label="返厂时间" width="180">
                 <template #default="{row}">
-                  {{ formatDateTime(row.actualReturnTime) }}
+                  {{ convertStockoutTime(row.actualReturnTime) }}
                 </template>
               </el-table-column>
 
@@ -287,7 +291,110 @@ import router from "@/router.js";
 import {Close, Plus, Search} from "@element-plus/icons-vue";
 // 在script setup部分添加
 import dayjs from 'dayjs'
-// 在setup()中添加
+
+const convertStockoutTime = (timeString) => {
+  if (!timeString) return '';
+  // 移除Z字符并解析为UTC时间
+  const utcTime = dayjs.utc(timeString.replace('Z', ''));
+  // 转换为北京时间（UTC+8）
+  return utcTime.isValid() ?
+      utcTime.add(8, 'hour').format('YYYY-MM-DD HH:mm:ss') :
+      timeString;
+};
+const getLatestUpdateTime = () => {
+  if (!lifecycleData.value) return null;
+
+  // 收集所有可能的时间字段（包含嵌套数据）
+  const timeCollector = [];
+
+  // 基础信息时间
+  if (lifecycleData.value.basicInfo) {
+    timeCollector.push(
+        lifecycleData.value.basicInfo.productionDate,
+        lifecycleData.value.basicInfo.warrantyEnd
+    );
+  }
+
+  // 入库信息
+  if (lifecycleData.value.inboundInfo) {
+    timeCollector.push(
+        lifecycleData.value.inboundInfo.createdAt,
+        lifecycleData.value.inboundInfo.qualityCheckTime
+    );
+  }
+
+  // 故障记录
+  if (lifecycleData.value.faultRecords) {
+    lifecycleData.value.faultRecords.forEach(record => {
+      timeCollector.push(
+          record.faultTime,
+          record.processedAt,
+          record.reviewTime
+      );
+    });
+  }
+
+  // 调拨记录
+  if (lifecycleData.value.transferRecords) {
+    lifecycleData.value.transferRecords.forEach(record => {
+      timeCollector.push(
+          record.createdAt,
+          record.actualTransferTime
+      );
+    });
+  }
+
+  // 返厂记录
+  if (lifecycleData.value.returnFactoryRecords) {
+    lifecycleData.value.returnFactoryRecords.forEach(record => {
+      timeCollector.push(
+          record.applyTime,
+          record.sentTime,
+          record.receivedTime,
+          record.actualReturnTime
+      );
+    });
+  }
+
+  // 报废记录
+  if (lifecycleData.value.scrapRecord) {
+    timeCollector.push(
+        lifecycleData.value.scrapRecord.applyTime,
+        lifecycleData.value.scrapRecord.approvalTime,
+        lifecycleData.value.scrapRecord.scrapTime
+    );
+  }
+
+  // 转换有效时间戳（带错误处理）
+  const validTimestamps = timeCollector
+      .flat() // 展平嵌套数组
+      .filter(t => t) // 过滤空值
+      .map(t => {
+        try {
+          // 统一预处理时间格式
+          const str = String(t)
+              .replace(/[年月]/g, '-')
+              .replace(/[日时分秒]/g, '')
+              .replace('T', ' ')
+              .replace(/Z$/, '')
+              .replace(/\.\d{3}$/, '');
+
+          const d = dayjs(str);
+          return d.isValid() ? d.valueOf() : null;
+        } catch {
+          return null;
+        }
+      })
+      .filter(t => t !== null);
+
+
+
+  if (validTimestamps.length === 0) return null;
+
+  // 获取最新时间并格式化
+  const maxTimestamp = Math.max(...validTimestamps);
+  return dayjs(maxTimestamp).format('YYYY-MM-DD HH:mm:ss');
+};
 const getScrapStatusTagType = (status) => {
   const statusMap = {
     '待审核': 'warning',
@@ -296,9 +403,38 @@ const getScrapStatusTagType = (status) => {
   }
   return statusMap[status] || 'info'
 }
+// 新增出入库类型样式映射
+const getInoutTagType = (type) => {
+  const typeMap = {
+    '入库': 'success',
+    '领用出库': 'danger',
+    '返厂出库': 'warning',
+    '调拨出库': 'info'
+  }
+  return typeMap[type] || 'info'
+}
+// 在文件顶部添加dayjs时区插件
+
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
+dayjs.tz.setDefault('Asia/Shanghai') // 设置默认时区为北京时间
+
+// 修改后的时间格式化方法
 const formatDateTime = (value) => {
-  if (!value) return '无记录'
-  return dayjs(value).format('YYYY-MM-DD HH:mm:ss')
+  if (!value) return '无记录';
+
+  const preprocessed = String(value)
+      .replace(/[年月]/g, '-')
+      .replace(/[日时分秒]/g, '')
+      .replace('T', ' ')
+      .replace(/Z$/, '')
+      .replace(/\.\d{3}$/, '');
+
+  const date = dayjs(preprocessed);
+  return date.isValid() ? date.format('YYYY-MM-DD HH:mm:ss') : '无效日期';
 }
 const currentUser = ref({})
 const dailyList = ref([]); // 库存数据列表
@@ -338,6 +474,7 @@ const handleSnSearch = async () => {
     const response = await axios.get(`/lifecycle/${searchSn.value}`)
     lifecycleData.value = response.data
 
+
     // 数据整合逻辑
     lifecycleData.value.inoutRecords = [
       ...(lifecycleData.value.inboundInfo ? [{
@@ -345,20 +482,26 @@ const handleSnSearch = async () => {
         type: '入库',
         detail: `采购单号：${lifecycleData.value.inboundInfo.orderId}`
       }] : []),
+      // 领用出库记录
+      ...(lifecycleData.value.stockoutRecords?.map(s => ({
+        time: convertStockoutTime(s.outTime),
+        type: '领用出库',
+        detail: `领用单号：SO-${s.id}（仓库：${s.locationName}）`
+      })) ?? []),
 
-      // 返厂出库记录（使用安全访问）
-      ...(lifecycleData.value.returnFactoryRecords?.map(r => ({
-        time: r.sentTime,
+      // 返厂出库记录
+      ...lifecycleData.value.returnFactoryRecords?.map(r => ({
+        time: convertStockoutTime(r.sentTime), // 已转换时间
         type: '返厂出库',
         detail: `返厂单号：RT-${r.returnId}`
-      })) ?? []), // 使用空数组作为fallback
+      })) ?? [],
 
-      // 返厂入库记录（使用安全访问）
-      ...(lifecycleData.value.returnFactoryRecords?.map(r => ({
-        time: r.actualReturnTime,
+      // 返厂入库记录
+      ...lifecycleData.value.returnFactoryRecords?.map(r => ({
+        time: convertStockoutTime(r.actualReturnTime), // 已转换时间
         type: '返厂入库',
         detail: `返厂单号：RT-${r.returnId}`
-      })) ?? []),
+      })) ?? [],
 
       // 调拨出库记录（使用安全访问）
       ...(lifecycleData.value.transferRecords?.map(t => ({

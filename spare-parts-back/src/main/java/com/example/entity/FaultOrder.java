@@ -1,5 +1,6 @@
 package com.example.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -41,6 +42,7 @@ public class FaultOrder {
     private String sn;
 
     @Column(name = "fault_time",  nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime faultTime;
 
     @Column(name = "reported_by", length = 255)
@@ -78,6 +80,7 @@ public class FaultOrder {
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     public Long getFaultId() {

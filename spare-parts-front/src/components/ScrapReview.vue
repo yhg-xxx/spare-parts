@@ -1,25 +1,28 @@
 <template>
   <div class="app-container">
+    <div class="main-content">
     <!-- 筛选条件 -->
     <div class="filter-container">
-      <el-select v-model="listQuery.status" placeholder="选择状态" clearable>
+      <el-select
+          v-model="selectedStatus"
+          multiple
+          collapse-tags
+          collapse-tags-tooltip
+          placeholder="选择状态"
+          style="width: 400px; margin-right: 15px"
+          @change="handleStatusChange"
+      >
         <el-option
-            v-for="status in statusOptions"
-            :key="status"
-            :label="status"
-            :value="status"
+            v-for="status in enhancedStatusOptions"
+            :key="status.value"
+            :label="status.label"
+            :value="status.value"
         />
       </el-select>
-      <el-button type="primary" @click="fetchData">查询</el-button>
     </div>
 
     <!-- 审核列表 -->
-    <el-table
-        :data="list"
-        border
-        highlight-current-row
-        @row-click="handleRowClick"
-    >
+    <el-table :data="filteredList" border highlight-current-row @row-click="handleRowClick" :row-class-name="tableRowClassName">
       <el-table-column prop="sn" label="SN号" width="180" />
       <el-table-column prop="scrapReason" label="报废原因" />
       <el-table-column prop="applyTime" label="申请时间" width="180" />
@@ -72,7 +75,7 @@
         <el-form-item label="审核状态" prop="partStatus" required>
           <el-select v-model="currentRecord.partStatus">
             <el-option
-                v-for="status in auditStatusOptions"
+                v-for="status in statusOptions"
                 :key="status"
                 :label="status"
                 :value="status"
@@ -111,10 +114,11 @@
       </template>
     </el-dialog>
   </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import {ref, reactive, computed, watch, onMounted} from 'vue'
 import axios from 'axios'
 import {ElMessage} from "element-plus";
 
@@ -122,15 +126,16 @@ const apiUrl = 'http://localhost:8080/scrapRecord/scrap-records'
 
 // 状态选项
 const statusOptions = ['待审核', '已报废', '驳回']
-const auditStatusOptions = ['已报废', '驳回']
-
-// 数据列表相关
-const list = ref([])
-const listQuery = reactive({
-  status: '待审核'
-})
-
-// 当前操作记录
+const statusConfig = {
+  all: { label: '全部', value: '' },
+  pending: { label: '待审核', value: '待审核' },
+  scrapped: { label: '已报废', value: '已报废' },
+  rejected: { label: '驳回', value: '驳回' }
+}
+const finalStatuses = ['已报废', '驳回']
+// 响应式数据
+const allData = ref([]) // 存储所有数据
+const selectedStatus = ref([statusConfig.pending.value])
 const dialogVisible = ref(false)
 const currentRecord = ref({
   orderId: '',
@@ -141,6 +146,29 @@ const currentRecord = ref({
   disposalMethod: '',
   executor: ''
 })
+
+// 计算筛选后的列表（前端过滤）
+const filteredList = computed(() => {
+  // 包含"全部"或空选时返回所有数据
+  if (selectedStatus.value.includes(statusConfig.all.value) ||
+      selectedStatus.value.length === 0) {
+    return allData.value
+  }
+
+  // 根据选中状态过滤数据
+  return allData.value.filter(item =>
+      selectedStatus.value.includes(item.partStatus)
+  )
+})
+
+// 修改后的状态选项（包含全部）
+const enhancedStatusOptions = ref([
+  statusConfig.all,
+  statusConfig.pending,
+  statusConfig.scrapped,
+  statusConfig.rejected
+])
+
 
 // 获取图片完整URL（添加时间戳防缓存）
 const getImageUrl = (url) => {
@@ -165,25 +193,27 @@ const statusTagType = (status) => {
 }
 
 // 获取数据
-const fetchData = async () => {
+const fetchAllData = async () => {
   try {
-    const params = {}
-    if (listQuery.status) params.partStatus = listQuery.status
-
-    const response = await axios.get(apiUrl, { params })
-    list.value = response.data
+    const response = await axios.get(apiUrl)
+    allData.value = response.data
   } catch (error) {
     console.error('获取数据失败:', error)
     ElMessage.error('获取数据失败')
   }
 }
-
 // 点击行显示审核对话框
 const handleRowClick = (row) => {
+  if (finalStatuses.includes(row.partStatus)) {
+    ElMessage.warning('该记录已审核完成，不可修改')
+    return
+  }
   currentRecord.value = { ...row }
   dialogVisible.value = true
 }
-
+const tableRowClassName = ({ row }) => {
+  return finalStatuses.includes(row.partStatus) ? 'disabled-row' : ''
+}
 // 提交审核
 const handleSubmit = async () => {
   try {
@@ -217,32 +247,98 @@ const handleSubmit = async () => {
 
     ElMessage.success('审核提交成功')
     dialogVisible.value = false
-    fetchData()
+    await fetchAllData()
   } catch (error) {
     console.error('操作失败:', error)
     ElMessage.error(`操作失败: ${error.response?.data?.message || error.message}`)
   }
 }
+const handleStatusChange = (values) => {
+  const lastValue = values[values.length - 1]
 
+  // 处理"全部"选项逻辑
+  if (lastValue === statusConfig.all.value) {
+    selectedStatus.value = [statusConfig.all.value]
+  } else {
+    selectedStatus.value = values.filter(v => v !== statusConfig.all.value)
+    // 空选时自动选择"全部"
+    if (selectedStatus.value.length === 0) {
+      selectedStatus.value = [statusConfig.all.value]
+    }
+  }
+}
 // 初始化加载数据
-fetchData()
+onMounted(() => {
+  fetchAllData()
+})
 </script>
 
 <style scoped>
 .app-container {
   padding: 20px;
+  display: flex;
+  justify-content: center; /* 确保内容水平居中 */
+}
+
+.main-content {
+  width: 1200px; /* 根据实际需要调整这个宽度 */
 }
 
 .filter-container {
   margin-bottom: 20px;
 }
 
-.el-table {
-  margin-top: 20px;
+/* 修改选择框样式 */
+.el-select {
+  width: 100%; /* 让选择框填满容器 */
 }
 
+.el-table {
+  width: 100%;
+  margin: 0 auto; /* 表格水平居中 */
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.main-content {
+  width: 1200px; /* 根据实际需求调整宽度 */
+}
+
+.filter-container {
+  margin-bottom: 20px;
+}
+
+/* 添加禁用行样式 */
+:deep(.disabled-row) {
+  cursor: not-allowed;
+  background-color: #f5f7fa;
+
+  /* 禁用悬停高亮 */
+  &:hover > td {
+    background-color: inherit !important;
+  }
+
+  /* 禁用当前行高亮 */
+  &.current-row > td {
+    background-color: inherit !important;
+  }
+}
+/* 保持原有图片样式 */
 .el-image {
   cursor: pointer;
   border-radius: 4px;
+  transition: transform 0.3s ease; /* 添加悬停动画 */
+}
+
+.el-image:hover {
+  transform: scale(1.05); /* 图片悬停放大效果 */
+}
+
+/* 优化对话框样式 */
+.el-dialog {
+  border-radius: 8px;
+}
+
+.el-form-item {
+  margin-bottom: 22px;
 }
 </style>
