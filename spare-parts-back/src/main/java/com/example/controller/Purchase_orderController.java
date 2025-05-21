@@ -31,6 +31,7 @@ public class Purchase_orderController {
     //插入
     @PostMapping("/purchase_order")
     public Purchase_order createPurchase_order(@RequestBody Purchase_order purchase_order) {
+        purchase_order.setCreated_at(LocalDateTime.now().toString());
         return purchase_orderRepository.save(purchase_order);
     }
 
@@ -79,17 +80,31 @@ public class Purchase_orderController {
     public ResponseEntity<List<StatusHistoryDTO>> getStatusHistories(
             @PathVariable Integer orderId) {
 
-        List<PurchaseOrderStatusHistory> histories =
-                statusHistoryRepository.findByPurchaseOrderOrderByChangedAtAsc(
-                        purchase_orderRepository.findById(orderId).orElseThrow()
-                );
+        Purchase_order order = purchase_orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
+        // 获取数据库记录
+        List<PurchaseOrderStatusHistory> histories =
+                statusHistoryRepository.findByPurchaseOrderOrderByChangedAtAsc(order);
+
+        // 创建初始状态（待上会）
+        StatusHistoryDTO initialStatus = new StatusHistoryDTO(
+                "待上会",
+                LocalDateTime.parse(order.getCreated_at()), // 需确保created_at是LocalDateTime格式
+                userRepository.findById(order.getApplicant_id())
+                        .orElseThrow().getName()
+        );
+
+        // 合并数据
         List<StatusHistoryDTO> dtos = histories.stream()
                 .map(history -> new StatusHistoryDTO(
                         history.getStatus(),
                         history.getChangedAt(),
                         history.getChangedBy().getName()
                 )).collect(Collectors.toList());
+
+        // 插入初始状态到列表开头
+        dtos.add(0, initialStatus);
 
         return ResponseEntity.ok(dtos);
     }

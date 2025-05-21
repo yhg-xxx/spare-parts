@@ -39,7 +39,7 @@
           </el-button>
 
           <!-- 现场工程师操作按钮 -->
-          <template v-if="currentUser.role === '现场工程师'">
+          <template v-if="currentUser.role === '二级维修人员'">
             <el-button
                 v-if="row.workOrderStatus === '待处理'"
                 size="small"

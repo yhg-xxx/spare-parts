@@ -65,7 +65,7 @@
     </el-row>
     <!-- 新增入库对话框 -->
     <el-dialog v-model="addDialogVisible" title="新建入库">
-      <el-form :model="addForm" label-width="120px">
+      <el-form ref="addFormRef" :model="addForm" label-width="120px">
         <!-- 采购单选择 -->
         <el-form-item label="采购单号" prop="orderId" required>
 
@@ -309,7 +309,7 @@ import {Download, Plus, Search, Upload, UploadFilled} from "@element-plus/icons-
 /* ---------------------------- 数据声明 ---------------------------- */
 // 用户相关
 const currentUser = ref({})
-
+const addFormRef = ref(null);
 // 分页相关
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -346,7 +346,17 @@ const addForm = reactive({
   manufacturer: '',
   warrantyUntil: ''
 });
-
+const initialAddForm = {
+  orderId: null,
+  locationId: null,
+  sparePartCategory: '',
+  sparePartStatus: '新好件',
+  unitPrice: 0,
+  taxRate: 0.13,
+  unit: '',
+  manufacturer: '',
+  warrantyUntil: ''
+};
 /* ---------------------------- 生命周期 ---------------------------- */
 onMounted(async () => {
   const user = JSON.parse(sessionStorage.getItem('user'))
@@ -421,6 +431,14 @@ const handleRowClick = async (row) => {
 // 打开新增对话框
 const openAddDailyDialog = async () => {
   try {
+    if (addFormRef.value) {
+      addFormRef.value.resetFields();
+      addFormRef.value.clearValidate();
+    }
+    // 重置表单数据
+    Object.assign(addForm, initialAddForm);
+    // 清空SN预览
+    snPreview.value = [];
     const res = await axios.get("http://localhost:8080/purchase_order/s");
     purchaseOrders.value = res.data || [];
     addDialogVisible.value = true;

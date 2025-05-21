@@ -123,7 +123,16 @@ import axios from 'axios'
 import {ElMessage} from "element-plus";
 
 const apiUrl = 'http://localhost:8080/scrapRecord/scrap-records'
-
+// 获取当前登录用户信息
+const getCurrentUser = () => {
+  try {
+    const userData = sessionStorage.getItem('user')
+    return userData ? JSON.parse(userData) : null
+  } catch (e) {
+    console.error('用户信息解析失败:', e)
+    return null
+  }
+}
 // 状态选项
 const statusOptions = ['待审核', '已报废', '驳回']
 const statusConfig = {
@@ -208,7 +217,8 @@ const handleRowClick = (row) => {
     ElMessage.warning('该记录已审核完成，不可修改')
     return
   }
-  currentRecord.value = { ...row }
+  currentRecord.value = { ...row,
+    executor: getCurrentUser()?.name || ''}
   dialogVisible.value = true
 }
 const tableRowClassName = ({ row }) => {

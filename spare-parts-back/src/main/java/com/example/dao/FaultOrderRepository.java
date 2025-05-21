@@ -12,4 +12,6 @@ public interface FaultOrderRepository extends
         JpaRepository<FaultOrder, Long>,
         JpaSpecificationExecutor<FaultOrder> {
     List<FaultOrder> findBySn(String sn);
+
+    List<FaultOrder> findBySnAndWorkOrderStatus(String sn, String WorkOrderStatus);
 }

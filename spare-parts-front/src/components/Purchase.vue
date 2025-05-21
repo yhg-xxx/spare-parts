@@ -2,7 +2,7 @@
   <div>
     <!-- 操作工具栏 -->
     <el-row :gutter="20" class="mb-4">
-      <el-col :span="12">
+      <el-col v-if="showAddButton" :span="12">
         <el-button
             type="primary"
             :icon="Plus"
@@ -79,13 +79,14 @@
       <!-- 操作列 -->
       <el-table-column
           label="操作"
-          width="180">
+          width="180"
+          v-if="currentUser.role !== '库管员'"> <!-- 新增条件判断 -->
         <template #default="{ row }">
           <div class="flex gap-2">
             <el-button
                 size="small"
                 :disabled="!canEditStatus(row.status)"
-                @click.stop="openStatusDialog(row, $event)"> <!-- 添加 $event 参数 -->
+                @click.stop="openStatusDialog(row, $event)">
               更新状态
             </el-button>
           </div>
@@ -110,14 +111,9 @@
               :status="getStepStatus(index)">
             <!-- 修改el-step的描述部分 -->
             <template #description>
-              <div v-if="historyMap[step] && historyMap[step].changedAt">
+              <div v-if="historyMap[step]">
                 <div>{{ formatDate(historyMap[step].changedAt) }}</div>
-                <!-- 待上会状态显示申请人 -->
-                <div v-if="step === '待上会'" class="operator-text">
-                  申请人：{{ currentUser.name }}
-                </div>
-                <!-- 其他状态显示操作人 -->
-                <div v-else-if="historyMap[step].operator" class="operator-text">
+                <div class="operator-text">
                   操作人：{{ historyMap[step].operator }}
                 </div>
               </div>
@@ -242,7 +238,10 @@ import { ElMessage } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import axios from 'axios'
 import router from '@/router.js'
-
+// 显示新增按钮的条件
+const showAddButton = computed(() =>
+    currentUser.value.role === '库管员'
+);
 /* 常量定义 */
 const API_BASE = 'http://localhost:8080/purchase_order'
 const STATUS_FLOW = [
@@ -361,9 +360,10 @@ const clearSearch = () => {
 }
 
 /* 订单状态相关 */
+// 修改状态编辑权限判断逻辑
 const canEditStatus = (status) =>
-    !['已完成', '已入库'].includes(status) &&
-    currentUser.value.role === '库管员'
+    !['已完成'].includes(status) &&
+    currentUser.value.role === '采购员' // 修改为采购员
 
 const updateOrderStatus = async () => {
   try {
@@ -439,35 +439,8 @@ const showFlowDialog = async (order) => {
         `${API_BASE}/${order.order_id}/histories`
     );
 
-    // 创建完整状态节点骨架
-    const statusNodes = STATUS_FLOW.reduce((acc, status) => {
-      acc[status] = {
-        changedAt: null,
-        operator: null
-      };
-      return acc;
-    }, {});
-
-    // 合并API数据（包含操作人信息）
-    data.forEach(item => {
-      if (statusNodes[item.status]) {
-        statusNodes[item.status] = {
-          changedAt: item.changedAt,
-          operator: item.operator
-        };
-      }
-    });
-
-    // 添加初始状态（待上会），使用当前用户作为申请人
-    statusNodes['待上会'] = {
-      changedAt: order.created_at,
-      operator: currentUser.value.name // 使用当前登录用户姓名
-    };
-
-    statusHistory.value = STATUS_FLOW.map(status => ({
-      status,
-      ...statusNodes[status]
-    }));
+    // 直接使用API返回的完整数据
+    statusHistory.value = data;
 
     flowDialogVisible.value = true;
   } catch (error) {

@@ -81,6 +81,11 @@
                   {{ formatDateTime(row.processedAt) }}
                 </template>
               </el-table-column>
+              <el-table-column prop="reviewAt" label="验收时间" width="180">
+                <template #default="{row}">
+                  {{ formatDateTime(row.reviewAt) }}
+                </template>
+              </el-table-column>
               <el-table-column prop="reviewResult" label="验收结果" width="120">
                 <template #default="{row}">
                   {{ row.reviewResult || '未验收' }}
@@ -204,7 +209,6 @@
     <el-button @click="openAddDailyDialog" type="primary" :icon="Plus">新增库存</el-button>
     <!-- 库存列表 -->
     <el-table :data="dailyList" stripe style="width: 100%">
-      <el-table-column prop="inventoryId" label="库存记录ID" />
       <el-table-column prop="partName" label="备件名称" />
       <el-table-column prop="locationName" label="库存名称" />
       <el-table-column prop="number" label="数量" />
@@ -329,7 +333,7 @@ const getLatestUpdateTime = () => {
       timeCollector.push(
           record.faultTime,
           record.processedAt,
-          record.reviewTime
+          record.reviewAt,
       );
     });
   }

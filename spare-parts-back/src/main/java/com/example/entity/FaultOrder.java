@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class FaultOrder {
 
     public enum WorkOrderStatus {
-        待处理, 处理中, 待验收,已验收, 已返厂, 已报废, 已关闭
+        待处理, 处理中, 待验收, 已验收, 已返厂, 已报废, 已关闭
     }
 
     public enum ReviewResult {

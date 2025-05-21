@@ -1,8 +1,10 @@
 package com.example.service;
 
+import com.example.dao.FaultOrderRepository;
 import com.example.dao.ReturnFactoryRepository;
 import com.example.dao.Spare_partRepository;
 import com.example.dto.ReturnFactoryDTO;
+import com.example.entity.FaultOrder;
 import com.example.entity.ReturnFactoryRecord;
 import com.example.entity.Spare_part;
 import org.springframework.beans.BeanUtils;
@@ -29,6 +31,9 @@ public class ReturnFactoryService {
 
     @Autowired
     private Spare_partRepository sparePartRepository;
+
+    @Autowired
+    private FaultOrderRepository faultOrderRepository;
 
     @Transactional
     public ReturnFactoryRecord createReturnRecord(ReturnFactoryRecord record) {
@@ -118,13 +123,21 @@ public class ReturnFactoryService {
         ReturnFactoryRecord record = returnFactoryRepository.findById(returnId)
                 .orElseThrow(() -> new RuntimeException("返厂记录不存在"));
 
+        // 添加状态校验
         if (!ReturnFactoryRecord.ReturnStatus.已返回.equals(record.getStatus()) ||
                 !ReturnFactoryRecord.RepairResult.修复失败.equals(record.getRepairResult())) {
-            throw new RuntimeException("只有修复失败的备件可以报废");
+            throw new RuntimeException("只有修复失败的返厂备件可以报废");
         }
 
         Spare_part sparePart = sparePartRepository.findById(record.getPartId())
                 .orElseThrow(() -> new RuntimeException("备件不存在"));
+
+
+        List<FaultOrder> pendingOrders = faultOrderRepository.findBySnAndWorkOrderStatus(sparePart.getSn(), "待处理");
+        pendingOrders.forEach(order -> {
+            order.setWorkOrderStatus(FaultOrder.WorkOrderStatus.已关闭);
+            faultOrderRepository.save(order);
+        });
 
         sparePart.setSparePartStatus(Spare_part.SparePartStatus.已报废);
         sparePartRepository.save(sparePart);

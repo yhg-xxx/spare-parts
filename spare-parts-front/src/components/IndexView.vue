@@ -156,6 +156,10 @@
               <el-icon><Tools /></el-icon>
               <span class="menu-text">维修管理</span>
             </router-link>
+            <router-link to="/view/faultorder1" class="menu-item">
+              <el-icon><Document /></el-icon>
+              <span class="menu-text">备件工单</span>
+            </router-link>
 
           <!-- 退出登录 -->
               <div class="logout-item" @click="handleLogout">
@@ -165,8 +169,84 @@
           </div>
         </div>
 
+        <div v-else-if="user.role === '采购员'" class="menu-container">
+          <div class="menu-list">
+            <el-menu
+                router
+                :default-active="$route.path"
+                class="side-menu"
+                background-color="#fff"
+                text-color="#606266"
+                active-text-color="#409eff"
+            >
+              <!-- 基础信息子菜单 -->
+              <el-sub-menu index="basic-info">
+                <template #title>
+                  <el-icon><FolderOpened /></el-icon>
+                  <span>基础信息</span>
+                </template>
+
+                <el-menu-item index="/view/sparepart">
+                  <el-icon><Collection /></el-icon>
+                  <span>备件信息</span>
+                </el-menu-item>
+
+
+                <el-menu-item index="/view/warehouse">
+                  <el-icon><MapLocation /></el-icon>
+                  <span>仓库信息</span>
+                </el-menu-item>
+              </el-sub-menu>
+            </el-menu>
+            <router-link to="/view/purchase" class="menu-item">
+              <el-icon><Goods /></el-icon>
+              <span class="menu-text">采购管理</span>
+            </router-link>
+
+            <router-link to="/view/ReturnFactoryManagement" class="menu-item">
+              <el-icon><Refresh /></el-icon>
+              <span class="menu-text">返厂记录</span>
+            </router-link>
+
+
+            <!-- 退出登录 -->
+            <div class="logout-item" @click="handleLogout">
+              <el-icon><SwitchButton /></el-icon>
+              <span class="menu-text">退出登录</span>
+            </div>
+          </div>
+        </div>
+
         <!-- 现场工程师菜单 -->
         <div v-else-if="user.role === '现场工程师'" class="menu-container">
+          <div class="menu-list">
+            <el-menu
+                router
+                :default-active="$route.path"
+                class="side-menu"
+                background-color="#fff"
+                text-color="#606266"
+                active-text-color="#409eff"
+            >
+              <!-- 基础信息子菜单 -->
+              <el-sub-menu index="basic-info">
+                <template #title>
+                  <el-icon><FolderOpened /></el-icon>
+                  <span>基础信息</span>
+                </template>
+
+                <el-menu-item index="/view/sparepart">
+                  <el-icon><Collection /></el-icon>
+                  <span>备件信息</span>
+                </el-menu-item>
+
+
+                <el-menu-item index="/view/warehouse">
+                  <el-icon><MapLocation /></el-icon>
+                  <span>仓库信息</span>
+                </el-menu-item>
+              </el-sub-menu>
+            </el-menu>
           <router-link to="/view/UsageRequestApply" class="menu-item">
             <el-icon><Tickets /></el-icon>
             <span class="menu-text">领用申请</span>
@@ -179,6 +259,59 @@
             <el-icon><Tools /></el-icon>
             <span class="menu-text">维修管理</span>
           </router-link>
+            <router-link to="/view/faultorder1" class="menu-item">
+              <el-icon><Document /></el-icon>
+              <span class="menu-text">备件工单</span>
+            </router-link>
+          <router-link to="/view/ScrapApply" class="menu-item">
+            <el-icon><WarnTriangleFilled /></el-icon>
+            <span class="menu-text">报废申请</span>
+          </router-link>
+          <!-- 新增退出登录 -->
+          <div class="logout-item" @click="handleLogout">
+            <el-icon><SwitchButton /></el-icon>
+            <span class="menu-text">退出登录</span>
+          </div>
+          </div>
+        </div>
+
+        <div v-else-if="user.role === '二级维修人员'" class="menu-container">
+          <div class="menu-list">
+            <el-menu
+                router
+                :default-active="$route.path"
+                class="side-menu"
+                background-color="#fff"
+                text-color="#606266"
+                active-text-color="#409eff"
+            >
+              <!-- 基础信息子菜单 -->
+              <el-sub-menu index="basic-info">
+                <template #title>
+                  <el-icon><FolderOpened /></el-icon>
+                  <span>基础信息</span>
+                </template>
+
+                <el-menu-item index="/view/sparepart">
+                  <el-icon><Collection /></el-icon>
+                  <span>备件信息</span>
+                </el-menu-item>
+
+
+                <el-menu-item index="/view/warehouse">
+                  <el-icon><MapLocation /></el-icon>
+                  <span>仓库信息</span>
+                </el-menu-item>
+              </el-sub-menu>
+            </el-menu>
+          <router-link to="/view/faultorder" class="menu-item">
+            <el-icon><Tools /></el-icon>
+            <span class="menu-text">维修管理</span>
+          </router-link>
+          <router-link to="/view/faultorder1" class="menu-item">
+            <el-icon><Document /></el-icon>
+            <span class="menu-text">备件工单</span>
+          </router-link>
           <router-link to="/view/ScrapApply" class="menu-item">
             <el-icon><WarnTriangleFilled /></el-icon>
             <span class="menu-text">报废申请</span>
@@ -189,6 +322,7 @@
             <span class="menu-text">退出登录</span>
           </div>
         </div>
+      </div>
       </div>
 
           <div class="main-content">

@@ -1,9 +1,5 @@
 <template>
   <div class="return-factory-management">
-    <!-- 新增返厂单按钮 -->
-    <el-button @click="openAddReturnDialog" type="primary" :icon="Plus">新增返厂单</el-button>
-
-    <!-- 返厂记录列表 -->
     <!-- 返厂记录列表 -->
     <el-table
         :data="returnList"
@@ -38,34 +34,29 @@
         <template #default="{row}">
           <!-- 移除详情按钮 -->
           <el-button
-              size="small"
-              type="primary"
-              @click.stop="showLogisticsDialog(row)"
-              v-if="row.status === '待返厂'">
+              v-if="row.status === '待返厂' && hasRole('采购员')"
+              @click.stop="showLogisticsDialog(row)">
             填写物流
           </el-button>
 
+          <!-- 处理结果按钮 - 仅采购员可见 -->
           <el-button
-              size="small"
-              type="success"
-              @click.stop="showResultDialog(row)"
-              v-if="(row.status === '已返厂' || row.status === '维修中')">
+              v-if="(row.status === '已返厂' || row.status === '维修中') && hasRole('采购员')"
+              @click.stop="showResultDialog(row)">
             处理结果
           </el-button>
 
+          <!-- 验收按钮 - 仅库管员可见 -->
           <el-button
-              size="small"
-              type="warning"
-              @click.stop="confirmRepair(row.returnId)"
-              v-if="row.status === '已返回' && row.repairResult === '修复成功'">
+              v-if="row.status === '已返回' && row.repairResult === '修复成功' && hasRole('库管员')"
+              @click.stop="confirmRepair(row.returnId)">
             验收
           </el-button>
 
+          <!-- 报废按钮 - 仅库管员可见 -->
           <el-button
-              size="small"
-              type="danger"
-              @click.stop="scrapPart(row.returnId)"
-              v-if="row.status === '已返回' && row.repairResult === '修复失败'">
+              v-if="row.status === '已返回' && row.repairResult === '修复失败' && hasRole('库管员')"
+              @click.stop="scrapPart(row.returnId)">
             报废
           </el-button>
         </template>
@@ -82,56 +73,8 @@
       />
     </div>
 
-    <!-- 新增返厂单对话框 -->
-    <el-dialog v-model="addReturnDialogVisible" title="新增返厂单" width="50%">
-      <el-form :model="addReturnForm" label-width="120px">
-        <el-form-item label="故障工单" required>
-          <el-select
-              v-model="addReturnForm.faultId"
-              placeholder="请选择故障工单"
-              filterable
-              remote
-              :remote-method="searchFaultOrders"
-              :loading="faultOrderLoading">
-            <el-option
-                v-for="item in faultOrderOptions"
-                :key="item.faultId"
-                :label="`${item.faultId} - ${item.sn} - ${item.faultDescription}`"
-                :value="item.faultId">
-            </el-option>
-          </el-select>
-        </el-form-item>
 
-        <el-form-item label="备件信息" v-if="selectedFaultOrder">
-          <div class="part-info">
-            <p>SN号: {{ selectedFaultOrder.sn || '--' }}</p>
-            <p>备件名称: {{ selectedPart?.partName || '--' }}</p>
-            <p>备件型号: {{ selectedPart?.partModel || '--' }}</p>
-            <p>生产厂家: {{ selectedPart?.manufacturerName || '--' }}</p>
-          </div>
-        </el-form-item>
 
-        <el-form-item label="返厂原因" required>
-          <el-input
-              v-model="addReturnForm.returnReason"
-              type="textarea"
-              :rows="3"
-              placeholder="请输入返厂原因"></el-input>
-        </el-form-item>
-
-        <el-form-item label="预计维修天数" required>
-          <el-input-number
-              v-model="addReturnForm.expectedRepairDays"
-              :min="1"
-              :max="90"></el-input-number>
-        </el-form-item>
-      </el-form>
-
-      <template #footer>
-        <el-button @click="addReturnDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitAddReturnForm">确定</el-button>
-      </template>
-    </el-dialog>
 
     <!-- 填写物流信息对话框 -->
     <el-dialog v-model="logisticsDialogVisible" title="填写物流信息" width="50%">
@@ -227,7 +170,6 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
 import axios from 'axios' // 添加axios导入
 import { onBeforeUnmount } from 'vue'
 
@@ -290,12 +232,11 @@ const faultOrderLoading = ref(false)
 const selectedFaultOrder = ref(null)
 const selectedPart = ref(null)
 
-// 假设当前用户信息
-const currentUser = ref({
-  userId: 'admin',
-  userName: '管理员'
-})
+const currentUser = ref(JSON.parse(sessionStorage.getItem('user')) || {})
+const hasRole = (roleName) => {
 
+   return currentUser.value?.role === roleName
+}
 // 初始化加载数据
 onMounted(() => {
   fetchData()
@@ -433,50 +374,9 @@ const handleFaultOrderSelect = async (faultId) => {
 }
 
 // 打开新增返厂单对话框
-const openAddReturnDialog = () => {
-  addReturnDialogVisible.value = true
-  addReturnForm.faultId = null
-  addReturnForm.returnReason = ''
-  addReturnForm.expectedRepairDays = 15
-  selectedFaultOrder.value = null
-  selectedPart.value = null
-}
 
-// 提交新增返厂单
-const submitAddReturnForm = async () => {
-  if (!addReturnForm.faultId) {
-    ElMessage.warning('请选择故障工单')
-    return
-  }
 
-  if (!addReturnForm.returnReason) {
-    ElMessage.warning('请输入返厂原因')
-    return
-  }
 
-  try {
-    const payload = {
-      faultId: addReturnForm.faultId,
-      returnReason: addReturnForm.returnReason,
-      expectedRepairDays: addReturnForm.expectedRepairDays,
-      createdBy: currentUser.value.userId
-    }
-
-    const res = await axios.post('/api/return-factory', payload)
-
-    if (!res?.data) {
-      throw new Error('API返回数据为空')
-    }
-
-    ElMessage.success('创建返厂单成功')
-    addReturnDialogVisible.value = false
-    fetchData()
-
-  } catch (error) {
-    console.error('创建返厂单失败:', error)
-    ElMessage.error(`创建返厂单失败: ${error.message || '未知错误'}`)
-  }
-}
 
 // 显示物流对话框
 const showLogisticsDialog = (row) => {
