@@ -8,6 +8,12 @@
       <el-table-column prop="id" label="领用单号" width="120" />
       <el-table-column prop="partName" label="备件名称" />
       <el-table-column prop="partModel" label="备件型号" />
+      <el-table-column prop="number" label="数量" width="120">
+        <template #default="{row}">
+          <span v-if="row.number">{{ row.number }}</span>
+          <span v-else style="color: #999">-</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="type" label="类型">
         <template #default="{row}">
           <el-tag :type="row.type === '维修借用' ? 'warning' : 'success'">
@@ -48,17 +54,35 @@
       <el-form :model="applyForm" label-width="100px" :rules="formRules">
         <!-- 新增备件名称 -->
         <el-form-item label="备件名称" prop="partName" required>
-          <el-input
+          <el-autocomplete
               v-model="applyForm.partName"
-              placeholder="请输入备件标准名称（如：SSD-1TB）"
+              :fetch-suggestions="nameQuerySearch"
+              @input="handleNameInput"
+              :loading="nameLoading"
+              :debounce="300"
+              placeholder="请输入备件标准名称"
+              @select="handleNameSelect"
           />
         </el-form-item>
 
-        <!-- 新增备件型号 -->
+        <!-- 修改备件型号输入为自动补全 -->
         <el-form-item label="备件型号" prop="partModel" required>
-          <el-input
+          <el-autocomplete
               v-model="applyForm.partModel"
-              placeholder="请输入完整型号（如：SAMSUNG-860EVO）"
+              :fetch-suggestions="modelQuerySearch"
+              :loading="nameLoading"
+              :debounce="300"
+              placeholder="请输入完整型号"
+              :disabled="!applyForm.partName"
+          />
+        </el-form-item>
+
+        <el-form-item label="数量" prop="number" required>
+          <el-input-number
+              v-model="applyForm.number"
+              :min="1"
+              :max="100"
+
           />
         </el-form-item>
 
@@ -108,14 +132,49 @@ const usageTypes = [
   { value: '维修申领', label: '维修申领（永久领用）' },
   { value: '维修借用', label: '维修借用（48小时内归还）' }
 ];
-
+const nameLoading = ref(false);
+const partNames = ref([]);
+const partModels = ref([]);
 const applyForm = ref({
+
   type: '',
   partName: '',
   partModel: '',
-  description: ''
+  description: '',
+  number: null  // 新增数量字段
 });
-
+const formRules = {
+  partName: [
+    { required: true, message: '请输入备件名称', trigger: 'blur' },
+    {
+      validator: (_, value, callback) => {
+        if (value && !partNames.value.includes(value)) {
+          callback(new Error('请输入有效的备件名称'));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  partModel: [
+    { required: true, message: '请输入备件型号', trigger: 'blur' },
+    {
+      validator: (_, value, callback) => {
+        if (value && applyForm.partName && !partModels.value.includes(value)) {
+          callback(new Error('请输入有效的型号'));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  number: [
+    { required: true, message: '请输入数量', trigger: 'blur' },
+    { type: 'number', min: 1, message: '数量至少为1', trigger: 'blur' }
+  ]
+};
 // 初始化加载
 onMounted(async () => {
   const user = JSON.parse(sessionStorage.getItem('user'));
@@ -128,8 +187,65 @@ onMounted(async () => {
 
   await fetchStockouts();  // 先获取出库记录
   await fetchUsageRequests();
+  await loadPartNames();
 });
+const loadPartNames = async () => {
+  try {
+    nameLoading.value = true;
+    const res = await axios.get('/api/spare-parts/names');
+    partNames.value = res.data;
+  } catch (error) {
+    ElMessage.error('获取备件名称失败');
+  }finally {
+    nameLoading.value = false;
+  }
+};
 
+// 名称输入自动补全
+const nameQuerySearch = (queryString, cb) => {
+  const results = queryString
+      ? partNames.value.filter(name =>
+          name.toLowerCase().includes(queryString.toLowerCase())
+      ).map(name => ({ value: name }))  // 确保格式转换
+      : partNames.value.map(name => ({ value: name }));  // 空查询时也转换格式
+
+  // 添加调试日志
+  console.log('Name suggestions:', results);
+
+  cb(results.length > 0 ? results : [{ value: '无匹配结果', disabled: true }]);
+};
+const handleNameInput = async (value) => {
+  try {
+    if (value) {
+      const res = await axios.get('/api/spare-parts/names');
+      partNames.value = res.data;
+      console.log('Updated names:', partNames.value);
+    }
+  } catch (error) {
+    console.error('名称输入错误:', error);
+  }
+};
+// 型号输入自动补全
+const modelQuerySearch = (queryString, cb) => {
+  const results = queryString
+      ? partModels.value.filter(model =>
+          model.toLowerCase().includes(queryString.toLowerCase())
+      )
+      : partModels.value;
+  cb(results.map(model => ({ value: model })));
+};
+
+// 监听名称变化
+const handleNameSelect = async (selected) => {
+  try {
+    const res = await axios.get('/api/spare-parts/models', {
+      params: { partName: selected.value }
+    });
+    partModels.value = res.data;
+  } catch (error) {
+    ElMessage.error('获取型号失败');
+  }
+};
 // 修改后的领用记录获取方法
 const fetchUsageRequests = async () => {
   try {

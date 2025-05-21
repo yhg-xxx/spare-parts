@@ -1,16 +1,27 @@
 <template>
   <div class="scrap-apply-container">
     <el-card class="apply-form">
+      <el-form
+          ref="form"
+          :model="form"
+          :rules="rules"
+          label-width="120px"
+      >
       <h2>备件报废申请</h2>
-      <el-form ref="form" :model="form" :rules="rules" label-width="120px">
-        <!-- SN号输入 -->
-        <el-form-item label="备件SN号" prop="sn" required>
-          <el-input
-              v-model="form.sn"
-              placeholder="请输入备件序列号"
-              clearable
-          ></el-input>
-        </el-form-item>
+      <el-form-item label="备件SN号" prop="sn" required>
+        <el-autocomplete
+            v-model="form.sn"
+            :fetch-suggestions="querySearch"
+            placeholder="请输入备件序列号"
+            clearable
+            @select="handleSelect"
+            value-key="sn"
+        >
+          <template #default="{ item }">
+            <div>{{ item.sn }}</div>
+          </template>
+        </el-autocomplete>
+      </el-form-item>
 
         <!-- 报废原因输入 -->
         <el-form-item label="报废原因" prop="scrapReason" required>
@@ -133,7 +144,11 @@ export default {
       isSubmitting: false,
       currentUser: null,
       records: [],
-      loading: false
+      loading: false,
+      snOptions: [], // 存储所有SN号的缓存
+      loadingSn: false
+
+
     };
   },
   async mounted() {
@@ -145,6 +160,24 @@ export default {
     }
   },
   methods: {
+
+    async querySearch(queryString, cb) {
+      try {
+        const response = await axios.get('/spare_part/sn-search', {
+          params: { keyword: queryString }
+        });
+        const results = response.data.map(sn => ({ value: sn, sn: sn }));
+        cb(results);
+      } catch (error) {
+        console.error('搜索SN失败:', error);
+        cb([]);
+      }
+    },
+    // 处理选中事件
+    handleSelect(item) {
+      this.form.sn = item.sn;
+    },
+
     getImageUrl(url) {
       if (!url) return '';
       // 添加时间戳解决缓存问题

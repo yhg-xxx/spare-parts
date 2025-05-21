@@ -61,15 +61,18 @@
     </div>
     <!-- 返还申请对话框 -->
     <el-dialog v-model="returnDialogVisible" title="备件返还申请">
-      <el-form :model="returnForm">
+      <el-form :model="returnForm" :rules="formRules"
+      ref="returnFormRef" >
         <el-form-item
             label="备件状态"
             prop="sparePartStatus"
             label-width="100px"
+            required
         >
           <el-select
               v-model="returnForm.sparePartStatus"
               placeholder请选择返还后状态
+              style="width: 100%"
           >
             <el-option
                 v-for="status in partStatusOptions"
@@ -109,7 +112,14 @@ const isSubmitting = ref(false)
 const returnForm = ref({
   sparePartStatus: ''
 })
+const returnFormRef = ref(null)
 
+// 添加验证规则
+const formRules = {
+  sparePartStatus: [
+    { required: true, message: '必须选择备件状态', trigger: 'change' }
+  ]
+}
 // 备件状态选项
 const partStatusOptions = [
   { value: '新好件', label: '新好件（未使用）' },
@@ -140,6 +150,7 @@ const fetchStockouts = async () => {
 // 提交返还申请
 const submitReturnApply = async () => {
   try {
+    await returnFormRef.value.validate()
     isSubmitting.value = true
 
     const requests = selectedItems.value.map(async item => {
@@ -167,12 +178,15 @@ const submitReturnApply = async () => {
     returnDialogVisible.value = false
     await fetchStockouts()
   } catch (error) {
-    ElMessage.error('提交失败：' + error.message)
+    if (error?.fields) { // 捕获验证错误
+      ElMessage.warning('请完善表单信息')
+    } else {
+      ElMessage.error('提交失败：' + error.message)
+    }
   } finally {
     isSubmitting.value = false
   }
 }
-
 // 初始化加载用户信息
 onMounted(async () => {
   const user = JSON.parse(sessionStorage.getItem('user'))

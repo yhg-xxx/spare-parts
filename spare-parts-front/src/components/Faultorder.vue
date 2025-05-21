@@ -168,19 +168,7 @@
           />
         </el-form-item>
 
-        <el-form-item label="工单状态" required>
-          <el-select
-              v-model="formData.workOrderStatus"
-              placeholder="请选择状态"
-          >
-            <el-option
-                v-for="status in statusOptions"
-                :key="status"
-                :label="status"
-                :value="status"
-            />
-          </el-select>
-        </el-form-item>
+
 
         <el-form-item label="故障时间" required>
           <el-date-picker
@@ -238,6 +226,18 @@
         >
           提交验收
         </el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+        v-model="acceptConfirmVisible"
+        title="确认接单"
+        width="500px"
+    >
+      <span>确定要接单吗？</span>
+      <template #footer>
+        <el-button @click="acceptConfirmVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmAccept">确认</el-button>
       </template>
     </el-dialog>
     <!-- 详情弹窗 -->
@@ -346,7 +346,6 @@ const tableData = ref([])
 const formData = reactive({
   sn: '',
   faultDescription: '',
-  workOrderStatus: '',
   faultTime:'',
 })
 const currentDetail = ref({})
@@ -359,6 +358,8 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const reviewDialogVisible = ref(false)
 const acceptanceDialogVisible = ref(false)
+const acceptConfirmVisible = ref(false)
+const currentAcceptOrder = ref(null)
 
 /* 响应式状态 - 文件上传 */
 const uploadMode = ref('upload')
@@ -385,8 +386,7 @@ const disposalTypes = ref([
   {label: '返厂修', value: '返厂修'}
 ])
 
-/* 常量定义 */
-const statusOptions = ['待处理', '处理中', '已验收', '已返厂', '已报废', '已关闭']
+
 
 /* 实例对象 */
 const request = axios.create({
@@ -461,7 +461,7 @@ const openEditDialog = (row, event) => {
 const resetForm = () => Object.assign(formData, {
   sn: '',
   faultDescription: '',
-  workOrderStatus: ''
+
 })
 
 /* 表单提交 */
@@ -471,7 +471,8 @@ const submitForm = async () => {
     const payload = {
       ...formData,
       faultTime: dayjs(formData.faultTime).format('YYYY-MM-DD HH:mm:ss'),
-      sn: formData.sn // 确保SN号存在
+      sn: formData.sn,// 确保SN号存在
+      ...(!isEdit.value && { reportedBy: currentUser.value.name })
     }
 
     isEdit.value
@@ -707,16 +708,26 @@ const handleRowClick = async (row) => {
     ElMessage.error('获取详情失败')
   }
 }
-const handleAccept = async (row, event) => {
+const handleAccept = (row, event) => {
   event.stopPropagation()
+  currentAcceptOrder.value = row
+  acceptConfirmVisible.value = true
+}
+
+/* 新增确认接单方法 */
+const confirmAccept = async () => {
   try {
-    await api.accept(row.faultId, {  // 调用更新接口
-      repairBy: currentUser.value.name, // 维修人员
+    if (!currentAcceptOrder.value) return
+
+    await api.accept(currentAcceptOrder.value.faultId, {
+      repairBy: currentUser.value.name,
     })
+
     ElMessage.success('接单成功')
-    await loadData() // 刷新列表
+    acceptConfirmVisible.value = false
+    await loadData()
   } catch (error) {
-    ElMessage.error('操作失败')
+    ElMessage.error('操作失败: ' + error.message)
   }
 }
 /* 新增上传成功处理 */

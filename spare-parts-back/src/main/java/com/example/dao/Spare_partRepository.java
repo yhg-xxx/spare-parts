@@ -44,4 +44,13 @@ public interface Spare_partRepository extends JpaRepository<Spare_part, Integer>
             @Param("partName") String partName);
 
     boolean existsByPartNameAndSn(String partName, String sn);
+
+    @Query("SELECT DISTINCT s.sn FROM Spare_part s WHERE s.sn LIKE :keyword AND s.sparePartStatus <> '已报废'")
+    List<String> findSNByKeyword(@Param("keyword") String keyword);
+
+    @Query("SELECT DISTINCT s.partName FROM Spare_part s")
+    List<String> findDistinctPartNames();
+
+    @Query("SELECT DISTINCT s.partModel FROM Spare_part s WHERE s.partName = ?1")
+    List<String> findModelsByPartName(String partName);
 }

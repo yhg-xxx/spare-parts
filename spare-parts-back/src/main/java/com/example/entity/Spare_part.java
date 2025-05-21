@@ -23,7 +23,7 @@ public class Spare_part {
         正常件, 在保件, 遗留件
     }
     // 关联故障工单（一对多）
-    @OneToMany(mappedBy = "sparePart", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "sparePart")
     private List<FaultOrder> faultOrders;
     // 实体字段
     @Id

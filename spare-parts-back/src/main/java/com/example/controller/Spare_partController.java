@@ -35,6 +35,16 @@ public class Spare_partController {
     @Autowired
     private ScrapRecordRepository scrapRecordRepository;
 
+    @GetMapping("/api/spare-parts/names")
+    public List<String> getAllPartNames() {
+        return spare_partRepository.findDistinctPartNames();
+    }
+
+    @GetMapping("/api/spare-parts/models")
+    public List<String> getModelsByPartName(@RequestParam String partName) {
+        return spare_partRepository.findModelsByPartName(partName);
+    }
+
     //插入
     @PostMapping("/spare_part")
     public Spare_part createSpare_part(@RequestBody Spare_part spare_part) {
@@ -83,6 +93,11 @@ public class Spare_partController {
 
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(sparePartService.searchParts(partName, pageable));
+    }
+
+    @GetMapping("/spare_part/sn-search")
+    public List<String> searchSN(@RequestParam String keyword) {
+        return spare_partRepository.findSNByKeyword("%" + keyword + "%");
     }
     @GetMapping("/spare_part/x")
     public List<Spare_part> getAllspart() {

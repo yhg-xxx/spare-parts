@@ -35,10 +35,6 @@ public class ReturnFactoryService {
         Spare_part sparePart = sparePartRepository.findById(record.getPartId())
                 .orElseThrow(() -> new RuntimeException("备件不存在"));
 
-        if (!"坏件".equals(sparePart.getSparePartStatus().name()) &&
-                !"返厂修".equals(sparePart.getSparePartStatus().name())) {
-            throw new RuntimeException("备件状态不符合返厂要求");
-        }
 
         record.setStatus(ReturnFactoryRecord.ReturnStatus.待返厂);
         record.setCreatedAt(new Date());

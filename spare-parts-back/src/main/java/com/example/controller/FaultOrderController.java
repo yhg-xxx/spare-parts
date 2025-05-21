@@ -4,6 +4,7 @@ import com.example.dao.FaultOrderRepository;
 import com.example.dao.Spare_partRepository;
 import com.example.entity.FaultOrder;
 import com.example.entity.Spare_part;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,18 +35,37 @@ public class FaultOrderController {
         return ResponseEntity.ok(orders); // HTTP 200
     }
 
+
     // 新增故障工单
     @PostMapping
+    @Transactional // 添加事务注解保证数据一致性
     public ResponseEntity<?> createFaultOrder(@RequestBody FaultOrder newOrder) {
         try {
-            // 自动设置故障时间为当前时间
-            newOrder.setFaultTime(LocalDateTime.now());
+            // 根据SN号查询备件
+            Optional<Spare_part> sparePartOpt = sparePartRepository.findBySn(newOrder.getSn());
+            if (sparePartOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("SN号不存在");
+            }
 
-            // 设置其他系统字段
+            Spare_part sparePart = sparePartOpt.get();
+
+            // 设置关联的备件
+            newOrder.setSparePart(sparePart);
+
+            // 自动设置故障时间和系统字段
+
             newOrder.setCreatedAt(LocalDateTime.now());
             newOrder.setWorkOrderStatus(FaultOrder.WorkOrderStatus.待处理);
 
+            // 自动设置报告人为当前用户（需从安全上下文中获取，此处示例为固定值）
+
+            // 保存故障工单
             FaultOrder savedOrder = faultOrderRepository.save(newOrder);
+
+            // 更新备件状态为"坏件"
+            sparePart.setSparePartStatus(Spare_part.SparePartStatus.坏件);
+            sparePartRepository.save(sparePart);
+
             return new ResponseEntity<>(savedOrder, HttpStatus.CREATED);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("创建失败: " + e.getMessage());
@@ -184,7 +204,11 @@ public class FaultOrderController {
         List<Map<String, Object>> timeline = new ArrayList<>();
 
         // 基础创建记录
-        timeline.add(createTimelineNode("工单创建", order.getCreatedAt(), "系统自动生成"));
+        timeline.add(createTimelineNode(
+                "工单创建",
+                order.getCreatedAt(),
+                order.getReportedBy() // 原"系统自动生成"改为实际报告人
+        ));
 
         // 处理中记录
         if (order.getProcessedAt() != null) {

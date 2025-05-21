@@ -4,9 +4,9 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "usagerequest", schema = "spare parts",
+@Table(name = "usagerequest", schema = "parts2",
         indexes = {
-                @Index(name = "ddd-p", columnList = "location_id") // 显式声明外键索引
+                @Index(name = "idx_location_id", columnList = "location_id") // 显式声明外键索引
         })
 public class UsageRequest implements Serializable {
 
@@ -44,6 +44,12 @@ public class UsageRequest implements Serializable {
 
     @Column(name = "create_time", columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '创建时间'")
     private String createTime;
+    @Column(name = "number", columnDefinition = "INT DEFAULT NULL COMMENT '数量'")
+    private Integer number;
+
+    // Getter & Setter
+    public Integer getNumber() { return number; }
+    public void setNumber(Integer number) { this.number = number; }
 
     // 无参构造函数
     public UsageRequest() {}
@@ -91,6 +97,7 @@ public class UsageRequest implements Serializable {
                 ", type=" + type +
                 ", status='" + status + '\'' +
                 ", createTime='" + createTime + '\'' +
+                ", number=" + number +
                 '}';
     }
 }

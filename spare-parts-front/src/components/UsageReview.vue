@@ -7,6 +7,12 @@
       <el-table-column prop="id" label="领用单号" width="120" />
       <el-table-column prop="partName" label="备件名称" />
       <el-table-column prop="partModel" label="备件型号" />
+      <el-table-column prop="number" label="数量" width="100">
+        <template #default="{row}">
+          <span v-if="row.number">{{ row.number }}</span>
+          <span v-else style="color: #999">-</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="type" label="类型">
         <template #default="{row}">
           <el-tag :type="row.type === '维修借用' ? 'warning' : 'success'">
@@ -84,6 +90,7 @@
             <el-descriptions-item label="领用单号">{{ currentApply.id }}</el-descriptions-item>
             <el-descriptions-item label="备件名称">{{ currentApply.partName }}</el-descriptions-item>
             <el-descriptions-item label="备件型号">{{ currentApply.partModel }}</el-descriptions-item>
+            <el-descriptions-item label="申请数量">{{ currentApply.number }}</el-descriptions-item>
             <el-descriptions-item label="申请说明">{{ currentApply.description }}</el-descriptions-item>
             <el-descriptions-item label="申请时间">{{ formatDate(currentApply.createTime) }}</el-descriptions-item>
           </el-descriptions>
@@ -97,7 +104,10 @@
               border
               @selection-change="handleSelectionChange"
           >
-            <el-table-column type="selection" width="55" />
+            <el-table-column
+                type="selection"
+                width="55"
+                :selectable="(row) => isSelectable(row)"/>
             <el-table-column prop="sn" label="SN码" width="150" />
             <el-table-column prop="partName" label="名称" />
             <el-table-column prop="partModel" label="型号" />
@@ -126,14 +136,23 @@
       </div>
 
       <template #footer>
-        <el-button @click="outDialogVisible = false">取消</el-button>
-        <el-button
-            type="primary"
-            :disabled="matchedSpareParts.length === 0"
-            @click="confirmOut"
-        >
-          确认出库
-        </el-button>
+        <div style="display: flex; align-items: center; gap: 16px">
+          <div class="selection-counter">
+            已选: {{ selectedSpares.length }}/{{ currentApply.number }}
+            <el-text v-if="selectedSpares.length < currentApply.number" type="warning" size="small">
+              （还需选择{{ currentApply.number - selectedSpares.length }}个）
+            </el-text>
+          </div>
+
+          <el-button @click="outDialogVisible = false">取消</el-button>
+          <el-button
+              type="primary"
+              :disabled="selectedSpares.length !== currentApply.number"
+              @click="confirmOut"
+          >
+            确认出库（{{ selectedSpares.length }}）
+          </el-button>
+        </div>
       </template>
     </el-dialog>
 
@@ -323,8 +342,11 @@ const showOutDialog = async (row) => {
 // 修改确认出库方法
 const confirmOut = async () => {
   try {
-    if (selectedSpares.value.length === 0) {
-      ElMessage.warning('请至少选择一个备件');
+    const requiredNumber = currentApply.value.number;
+
+    // 验证数量匹配
+    if (selectedSpares.value.length !== requiredNumber) {
+      ElMessage.warning(`需要选择${requiredNumber}个备件，当前已选${selectedSpares.value.length}个`);
       return;
     }
 
@@ -436,7 +458,17 @@ const getLocationName = (locationId) => {
   // 返回匹配结果
   return warehouse ? warehouse.locationName : locationId;
 };
-// 新增：处理表格多选
+
+const isSelectable = (row) => {
+  // 已选数量未满时所有都可选
+  if (selectedSpares.value.length < currentApply.value.number) {
+    return true;
+  }
+  // 已选数量满时，仅已选中的可取消
+  return selectedSpares.value.some(sp => sp.partId === row.partId);
+};
+
+// 修改后的handleSelectionChange方法
 const handleSelectionChange = (selection) => {
   selectedSpares.value = selection;
 };
@@ -468,6 +500,27 @@ const getStockoutTime = (requestId) => {
 </script>
 
 <style scoped>
+/* 添加禁用样式 */
+:deep(.el-table__row) .is-disabled .el-checkbox__inner {
+  background-color: #f5f7fa;
+  border-color: #e4e7ed;
+  cursor: not-allowed;
+}
+:deep(.el-table__row) .is-disabled .el-checkbox__input.is-disabled + span {
+  color: #c0c4cc;
+  cursor: not-allowed;
+}
+.selection-counter {
+  flex: 1;
+  color: #666;
+  font-size: 14px;
+  padding: 0 12px;
+}
+
+/* 高亮数量不匹配提示 */
+:deep(.el-table__row) .el-checkbox.is-disabled .el-checkbox__label {
+  color: #f56c6c;
+}
 .mt-4 {
   margin-top: 1rem;
 }.out-info-container {
