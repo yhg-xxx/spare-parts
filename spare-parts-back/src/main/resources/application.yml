@@ -33,9 +33,18 @@ spring:
         - classpath:/public/
         - file:${app.upload.path}
 
+  jackson:
+    deserialization:
+      accept_empty_array_as_null_object: true
+    default-property-inclusion: non_null
+
 app:
   upload:
     path: ${UPLOAD_DIR:./uploads}
 
 server:
   port: 8080
+
+amap:
+  api-key: c0303816cca97cc7d7e7e2cb4da780af
+  geocode-url: https://restapi.amap.com/v3/geocode/regeo

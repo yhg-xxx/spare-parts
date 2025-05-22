@@ -89,6 +89,12 @@
             </div>
           </template>
         </el-upload>
+        <div v-if="uploading" class="location-loading" style="margin-top: 10px;">
+          <el-icon class="loading-icon">
+            <!-- 同定位加载图标 -->
+          </el-icon>
+          <span class="loading-text">正在上传图片...</span>
+        </div>
       </div>
 
       <!-- 摄像头拍摄模式 -->
@@ -96,13 +102,23 @@
         <div class="camera-preview">
           <video ref="videoElement" class="video-preview" autoplay></video>
           <canvas ref="canvasElement" class="canvas-preview" style="display: none;"></canvas>
+
+        </div>
+        <div v-if="locating" class="location-loading">
+          <el-icon class="loading-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" style="width: 1em; height: 1em;">
+              <path fill="currentColor" d="M512 64a32 32 0 0 1 32 32v192a32 32 0 0 1-64 0V96a32 32 0 0 1 32-32zm0 640a32 32 0 0 1 32 32v192a32 32 0 1 1-64 0V736a32 32 0 0 1 32-32zm448-192a32 32 0 0 1-32 32H736a32 32 0 1 1 0-64h192a32 32 0 0 1 32 32zm-640 0a32 32 0 0 1-32 32H96a32 32 0 0 1 0-64h192a32 32 0 0 1 32 32zM195.2 195.2a32 32 0 0 1 45.248 0L376.32 331.008a32 32 0 0 1-45.248 45.248L195.2 240.448a32 32 0 0 1 0-45.248zm452.544 452.544a32 32 0 0 1 45.248 0L828.8 783.552a32 32 0 0 1-45.248 45.248L647.744 692.992a32 32 0 0 1 0-45.248zM783.552 195.2a32 32 0 0 1 45.248 45.248L692.992 376.32a32 32 0 0 1-45.248-45.248L783.552 195.2zM331.008 647.744a32 32 0 0 1 45.248 45.248L240.448 828.8a32 32 0 0 1-45.248-45.248L331.008 647.744z"/>
+            </svg>
+          </el-icon>
+          <span class="loading-text">正在获取地理位置...</span>
         </div>
 
         <div class="camera-controls">
           <el-button
               type="primary"
               @click="capturePhoto"
-              :disabled="!cameraReady"
+              :disabled="!cameraReady || locating"
+              :loading="locating"
           >
             拍摄照片
           </el-button>
@@ -149,6 +165,7 @@
         </el-button>
       </template>
     </el-dialog>
+
     <!-- 新增/编辑弹窗 -->
     <el-dialog
         v-model="dialogVisible"
@@ -340,13 +357,13 @@ import {ElMessage} from 'element-plus'
 import axios from "axios"
 import router from "@/router.js"
 import dayjs from "dayjs";
-
+const uploading = ref(false)
 /* 响应式状态 - 数据相关 */
 const tableData = ref([])
 const formData = reactive({
   sn: '',
   faultDescription: '',
-  faultTime:'',
+  faultTime: '',
 })
 const currentDetail = ref({})
 const currentUser = ref(null)
@@ -368,7 +385,7 @@ const uploadAction = ref('http://localhost:8080/files/upload')
 const uploadHeaders = ref({
   'Authorization': `Bearer ${localStorage.getItem('token')}`
 })
-
+const locating = ref(false);
 /* 响应式状态 - 摄像头相关 */
 const videoElement = ref(null)
 const canvasElement = ref(null)
@@ -385,7 +402,6 @@ const disposalTypes = ref([
   {label: '修好件', value: '修好件'},
   {label: '返厂修', value: '返厂修'}
 ])
-
 
 
 /* 实例对象 */
@@ -420,6 +436,15 @@ onMounted(async () => {
   }
   currentUser.value = user;
   await loadData();
+  if ('geolocation' in navigator) {
+    navigator.permissions.query({name: 'geolocation'}).then(permissionStatus => {
+      permissionStatus.onchange = () => {
+        if (permissionStatus.state === 'denied') {
+          ElMessage.warning('位置权限已被拒绝，水印将不显示位置信息')
+        }
+      }
+    })
+  }
 });
 
 /* 数据方法 */
@@ -472,7 +497,7 @@ const submitForm = async () => {
       ...formData,
       faultTime: dayjs(formData.faultTime).format('YYYY-MM-DD HH:mm:ss'),
       sn: formData.sn,// 确保SN号存在
-      ...(!isEdit.value && { reportedBy: currentUser.value.name })
+      ...(!isEdit.value && {reportedBy: currentUser.value.name})
     }
 
     isEdit.value
@@ -508,7 +533,10 @@ const initCamera = async () => {
   }
 }
 const capturePhoto = async () => {
+
   try {
+    locating.value = true
+    await fetchLocation()
     const video = videoElement.value
     const canvas = canvasElement.value
     const context = canvas.getContext('2d')
@@ -530,22 +558,29 @@ const capturePhoto = async () => {
     context.shadowOffsetY = 2
     context.shadowBlur = 3
 
-    const timestamp = new Date().toLocaleString()
+
     const lineHeight = baseFontSize * 1.2
     const padding = 10
 
-    // 双行水印
-    context.fillText(
-        timestamp,
-        canvas.width - padding,
-        canvas.height - padding - lineHeight
-    )
-    context.fillText(
-        `操作人：${currentUser.value.name}`,
-        canvas.width - padding,
-        canvas.height - padding
-    )
 
+    const locationStatus = () => {
+      if (locating.value) return '定位中...'
+      if (!currentLocation.value) return '未获取位置'
+      return currentLocation.value.formatted_address || '未知位置'
+    }
+
+    const lines = [
+      dayjs().format('YYYY-MM-DD HH:mm:ss'),
+      `操作人：${currentUser.value.name}`,
+      `地址：${locationStatus()}`
+    ].filter(Boolean);
+    lines.forEach((text, index) => {
+      context.fillText(
+          text,
+          canvas.width - padding,
+          canvas.height - padding - (lines.length - index - 1) * lineHeight
+      )
+    })
     // 转换为高质量JPEG
     const blob = await new Promise(resolve =>
         canvas.toBlob(resolve, 'image/jpeg', 0.9)
@@ -565,6 +600,8 @@ const capturePhoto = async () => {
     }
   } catch (error) {
     ElMessage.error(`拍摄失败：${error.message}`)
+  } finally {
+    locating.value = false  // 确保最终关闭提示
   }
 }
 const switchCamera = async () => {
@@ -580,7 +617,8 @@ const switchCamera = async () => {
 
 /* 修改后的图片处理函数 */
 const processImage = (file) => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
+    await fetchLocation()
     const reader = new FileReader()
 
     reader.onload = async (e) => {
@@ -620,16 +658,26 @@ const processImage = (file) => {
           const padding = 10
 
           // 绘制水印
-          ctx.fillText(
-              timestamp,
-              canvas.width - padding,
-              canvas.height - padding - lineHeight
-          )
-          ctx.fillText(
-              `操作人：${currentUser.value.name}`,
-              canvas.width - padding,
-              canvas.height - padding
-          )
+
+          const locationStatus = () => {
+            if (locating.value) return '定位中...'
+            if (!currentLocation.value) return '未获取位置'
+            return currentLocation.value.formatted_address || '未知位置'
+          }
+
+
+          const lines = [
+            dayjs().format('YYYY-MM-DD HH:mm:ss'),
+            `操作人：${currentUser.value.name}`,
+            `地址：${locationStatus()}`
+          ].filter(Boolean);
+          lines.forEach((text, index) => {
+            ctx.fillText(
+                text,
+                canvas.width - padding,
+                canvas.height - padding - (lines.length - index - 1) * lineHeight
+            )
+          })
 
           // 转换回文件
           canvas.toBlob(blob => {
@@ -732,6 +780,7 @@ const confirmAccept = async () => {
 }
 /* 新增上传成功处理 */
 const handleUploadSuccess = (response) => {
+  uploading.value = false
   if (response.code === 200) {
     uploadedImage.value = response.url
     ElMessage.success('图片上传成功')
@@ -739,9 +788,13 @@ const handleUploadSuccess = (response) => {
     ElMessage.error(response.msg || '图片上传失败')
   }
 }
-
+const handleUploadError = (error) => {
+  uploading.value = false
+  ElMessage.error('上传失败: ' + error.message)
+}
 /* 修改上传前处理 */
 const beforeUpload = async (file) => {
+  uploading.value = true
   const isImage = file.type.startsWith('image/')
   const isLt20M = file.size / 1024 / 1024 < 20
 
@@ -765,6 +818,7 @@ const beforeUpload = async (file) => {
       lastModified: Date.now()
     })
   } catch (error) {
+    uploading.value = false
     ElMessage.error('图片处理失败: ' + error.message)
     return false
   }
@@ -803,11 +857,122 @@ request.interceptors.response.use(
       return Promise.reject(error)
     }
 )
+// 新增响应式变量
+const currentLocation = ref(null)
+
+// 获取地理位置方法
+const fetchLocation = async () => {
+  const GEOLOCATION_TIMEOUT = 8000;
+  const API_TIMEOUT = 5000;
+  const MAX_RETRIES = 2;
+
+  locating.value = true; // 开始定位标识
+
+  try {
+    let finalLocation = '';
+    let position = null;
+
+    // 带重试机制的定位（保持原逻辑）
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+              resolve,
+              reject,
+              {
+                enableHighAccuracy: true,
+                timeout: GEOLOCATION_TIMEOUT,
+                maximumAge: 0 // 关键点：禁用位置缓存
+              }
+          );
+        });
+        break;
+      } catch (error) {
+        if (attempt === MAX_RETRIES) throw error;
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+      }
+    }
+
+    // 强制发起新请求（移除缓存检查）
+    const [_, geocodeRes] = await Promise.allSettled([
+      new Promise(resolve => setTimeout(resolve, 1000)),
+      request.get('/api/location', {
+        params: {
+          longitude: position.coords.longitude.toFixed(6),
+          latitude: position.coords.latitude.toFixed(6)
+        },
+        timeout: API_TIMEOUT
+      })
+    ]);
+
+    // 处理地理编码结果（保持原逻辑）
+    if (geocodeRes.status === 'fulfilled') {
+      finalLocation = {
+        formatted_address: geocodeRes.value?.regeocode?.formatted_address,
+        coordinates: `${position.coords.latitude.toFixed(4)},${position.coords.longitude.toFixed(4)}`
+      };
+    } else {
+      finalLocation = {
+        formatted_address: `纬度:${position.coords.latitude.toFixed(4)}, 经度:${position.coords.longitude.toFixed(4)}`,
+        coordinates: ''
+      };
+    }
+
+    currentLocation.value = finalLocation;
+  } catch (error) {
+    console.error('定位失败:', error);
+    // 错误处理逻辑保持原样
+  } finally {
+    locating.value = false;
+  }
+};
 </script>
 
 <style scoped>
 
+/* 新增加载动画样式 */
+.location-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin-top: 16px;
+}
 
+.loading-icon {
+  animation: rotate 1.2s linear infinite;
+  margin-right: 8px;
+  color: #1890ff;
+}
+
+.loading-text {
+  color: #606266;
+  font-size: 14px;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 修改水印中的定位状态显示 */
+.image-tips {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #909399;
+  display: flex;
+  align-items: center;
+}
+
+.location-status {
+  margin-left: 4px;
+}
 /* 分类标题样式增强 */
 :deep(.full-row) {
   grid-column: 1 / -1;
@@ -914,16 +1079,16 @@ request.interceptors.response.use(
     padding-top: 56.25%; /* 16:9 比例 */
   }
 }
+
 /* 新增水印样式 */
 .watermark {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 20px;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
+  font-size: 18px;
+  line-height: 1.5;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+  max-width: 80%;
+  word-break: break-all;
 }
+
 /* 新增预览相关样式 */
 .preview-container h4 {
   color: #666;
