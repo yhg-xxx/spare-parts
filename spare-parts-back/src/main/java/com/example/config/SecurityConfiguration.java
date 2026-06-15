@@ -20,7 +20,8 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(conf->conf
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 允许所有 OPTIONS 请求
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/login/**").permitAll()
                         .requestMatchers("/files/**").permitAll()
                         .requestMatchers("/purchase_order/**").permitAll()
@@ -31,6 +32,10 @@ public class SecurityConfiguration {
                         .requestMatchers("/spare_part/**").permitAll()
                         .requestMatchers("/lifecycle/**").permitAll()
                         .requestMatchers("/scrapRecord/**").permitAll()
+                        .requestMatchers("/").permitAll()
+                        .requestMatchers("/index.html").permitAll()
+                        .requestMatchers("/assets/**").permitAll()
+                        .requestMatchers("/favicon.ico").permitAll()
 
                 )
                 .csrf(AbstractHttpConfigurer::disable)

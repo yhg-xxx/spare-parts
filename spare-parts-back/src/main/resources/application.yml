@@ -48,3 +48,12 @@ server:
 amap:
   api-key: c0303816cca97cc7d7e7e2cb4da780af
   geocode-url: https://restapi.amap.com/v3/geocode/regeo
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always

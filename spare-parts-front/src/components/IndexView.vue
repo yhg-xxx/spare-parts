@@ -39,9 +39,6 @@
                 <el-icon><MapLocation /></el-icon>
                 <span>仓库信息</span>
               </el-menu-item>
-
-
-
             </el-sub-menu>
           </el-menu>
           <router-link to="/view/purchase" class="menu-item">
@@ -296,7 +293,6 @@
                   <el-icon><Collection /></el-icon>
                   <span>备件信息</span>
                 </el-menu-item>
-
 
                 <el-menu-item index="/view/warehouse">
                   <el-icon><MapLocation /></el-icon>
