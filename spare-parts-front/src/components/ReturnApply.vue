@@ -27,6 +27,7 @@
     <!-- 批量操作 -->
     <div class="mt-4">
       <el-button
+          id="return-apply-batch-btn"
           type="warning"
           :disabled="selectedItems.length === 0"
           @click="openReturnDialog"
@@ -70,8 +71,9 @@
             required
         >
           <el-select
+              id="return-apply-status"
               v-model="returnForm.sparePartStatus"
-              placeholder请选择返还后状态
+              placeholder="请选择返还后状态"
               style="width: 100%"
           >
             <el-option
@@ -85,8 +87,9 @@
       </el-form>
 
       <template #footer>
-        <el-button @click="returnDialogVisible = false">取消</el-button>
+        <el-button id="return-apply-cancel" @click="returnDialogVisible = false">取消</el-button>
         <el-button
+            id="return-apply-submit"
             type="primary"
             :loading="isSubmitting"
             @click="submitReturnApply"

@@ -3,17 +3,18 @@
     <!-- 操作按钮和搜索 -->
     <el-row :gutter="20" class="toolbar-container">
       <el-col :span="12">
-        <el-button type="success" @click="handleCreate" :icon="Plus">添加备件</el-button>
+        <el-button id="sparepart-add-btn" type="success" @click="handleCreate" :icon="Plus">添加备件</el-button>
       </el-col>
       <el-col :span="12" class="search-container">
         <el-input
+            id="sparepart-search-input"
             v-model="listQuery.partName"
             placeholder="请输入备件名称"
             clearable
             class="search-input"
         />
-        <el-button type="primary" @click="handleFilter" :icon="Search" class="search-btn">查询</el-button>
-        <el-button @click="clearSearch" class="reset-btn">清空</el-button>
+        <el-button id="sparepart-search-btn" type="primary" @click="handleFilter" :icon="Search" class="search-btn">查询</el-button>
+        <el-button id="sparepart-clear-btn" @click="clearSearch" class="reset-btn">清空</el-button>
       </el-col>
     </el-row>
 
@@ -73,15 +74,16 @@
     <el-dialog v-model="dialogVisible" :title="dialogTypeMap[dialogType]" width="600px">
       <el-form ref="formRef" :model="formData" :rules="rules" label-width="100px">
         <el-form-item label="备件名称" prop="partName">
-          <el-input v-model="formData.partName" placeholder="请输入备件名称" />
+          <el-input id="sparepart-form-partname" v-model="formData.partName" placeholder="请输入备件名称" />
         </el-form-item>
 
         <el-form-item label="型号规格" prop="partModel">
-          <el-input v-model="formData.partModel" placeholder="请输入型号规格" />
+          <el-input id="sparepart-form-partmodel" v-model="formData.partModel" placeholder="请输入型号规格" />
         </el-form-item>
 
         <el-form-item label="分类" prop="category">
           <el-select
+              id="sparepart-form-category"
               v-model="formData.category"
               placeholder="请选择分类"
               style="width: 100%"
@@ -98,6 +100,7 @@
 
         <el-form-item label="状态" prop="sparePartStatus">
           <el-select
+              id="sparepart-form-status"
               v-model="formData.sparePartStatus"
               placeholder="请选择状态"
               style="width: 100%"
@@ -113,6 +116,7 @@
 
         <el-form-item label="类型" prop="sparePartType">
           <el-select
+              id="sparepart-form-type"
               v-model="formData.sparePartType"
               placeholder="请选择类型"
               style="width: 100%"
@@ -128,6 +132,7 @@
 
         <el-form-item label="仓库位置" prop="locationId">
           <el-select
+              id="sparepart-form-location"
               v-model="formData.locationId"
               placeholder="请选择仓库"
               style="width: 100%"
@@ -143,18 +148,19 @@
         </el-form-item>
 
         <el-form-item label="序列号" prop="sn">
-          <el-input v-model="formData.sn" placeholder="请输入序列号" />
+          <el-input id="sparepart-form-sn" v-model="formData.sn" placeholder="请输入序列号" />
         </el-form-item>
 
         <el-form-item label="生产厂家" prop="manufacturer">
-          <el-input v-model="formData.manufacturer" placeholder="请输入生产厂家" />
+          <el-input id="sparepart-form-manufacturer" v-model="formData.manufacturer" placeholder="请输入生产厂家" />
         </el-form-item>
 
         <el-form-item label="单位" prop="unit">
-          <el-input v-model="formData.unit" placeholder="请输入单位" />
+          <el-input id="sparepart-form-unit" v-model="formData.unit" placeholder="请输入单位" />
         </el-form-item>
         <el-form-item label="库存状态" prop="status">
           <el-select
+              id="sparepart-form-invstatus"
               v-model="formData.status"
               placeholder="请选择库存状态"
               style="width: 100%"

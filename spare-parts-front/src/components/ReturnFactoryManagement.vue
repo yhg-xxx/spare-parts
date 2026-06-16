@@ -80,15 +80,16 @@
     <el-dialog v-model="logisticsDialogVisible" title="填写物流信息" width="50%">
       <el-form :model="logisticsForm" label-width="120px">
         <el-form-item label="物流公司" required>
-          <el-input v-model="logisticsForm.logisticsCompany" placeholder="请输入物流公司"></el-input>
+          <el-input id="return-logistics-company" v-model="logisticsForm.logisticsCompany" placeholder="请输入物流公司"></el-input>
         </el-form-item>
 
         <el-form-item label="物流单号" required>
-          <el-input v-model="logisticsForm.logisticsNumber" placeholder="请输入物流单号"></el-input>
+          <el-input id="return-logistics-number" v-model="logisticsForm.logisticsNumber" placeholder="请输入物流单号"></el-input>
         </el-form-item>
 
         <el-form-item label="发出时间" required>
           <el-date-picker
+              id="return-logistics-senttime"
               v-model="logisticsForm.sentTime"
               type="datetime"
 
@@ -98,8 +99,8 @@
       </el-form>
 
       <template #footer>
-        <el-button @click="logisticsDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitLogisticsForm">确定</el-button>
+        <el-button id="return-logistics-cancel" @click="logisticsDialogVisible = false">取消</el-button>
+        <el-button id="return-logistics-submit" type="primary" @click="submitLogisticsForm">确定</el-button>
       </template>
     </el-dialog>
 
@@ -107,7 +108,7 @@
     <el-dialog v-model="resultDialogVisible" title="处理返厂结果" width="50%">
       <el-form :model="resultForm" label-width="120px">
         <el-form-item label="维修结果" required>
-          <el-radio-group v-model="resultForm.repairResult">
+          <el-radio-group id="return-result-radio" v-model="resultForm.repairResult">
             <el-radio label="修复成功">修复成功</el-radio>
             <el-radio label="修复失败">修复失败</el-radio>
             <el-radio label="未修复">未修复</el-radio>
@@ -116,6 +117,7 @@
 
         <el-form-item label="维修描述">
           <el-input
+              id="return-result-desc"
               v-model="resultForm.repairDescription"
               type="textarea"
               :rows="3"
@@ -124,6 +126,7 @@
 
         <el-form-item label="实际返回时间" required>
           <el-date-picker
+              id="return-result-returntime"
               v-model="resultForm.actualReturnTime"
               type="datetime"
               placeholder="选择返回时间">
@@ -132,8 +135,8 @@
       </el-form>
 
       <template #footer>
-        <el-button @click="resultDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitResultForm">确定</el-button>
+        <el-button id="return-result-cancel" @click="resultDialogVisible = false">取消</el-button>
+        <el-button id="return-result-submit" type="primary" @click="submitResultForm">确定</el-button>
       </template>
     </el-dialog>
 

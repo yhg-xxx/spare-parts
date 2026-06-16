@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- 申请操作区和记录列表 -->
-    <el-button @click="openApplyDialog" type="primary" :icon="Plus">新建领用</el-button>
+    <el-button id="usage-apply-add-btn" @click="openApplyDialog" type="primary" :icon="Plus">新建领用</el-button>
 
     <!-- 领用记录表格 -->
     <el-table :data="usageRequests" stripe style="width: 100%" class="mt-4">
@@ -55,6 +55,7 @@
         <!-- 新增备件名称 -->
         <el-form-item label="备件名称" prop="partName" required>
           <el-autocomplete
+              id="usage-apply-partname"
               v-model="applyForm.partName"
               :fetch-suggestions="nameQuerySearch"
               @input="handleNameInput"
@@ -68,6 +69,7 @@
         <!-- 修改备件型号输入为自动补全 -->
         <el-form-item label="备件型号" prop="partModel" required>
           <el-autocomplete
+              id="usage-apply-partmodel"
               v-model="applyForm.partModel"
               :fetch-suggestions="modelQuerySearch"
               :loading="nameLoading"
@@ -79,6 +81,7 @@
 
         <el-form-item label="数量" prop="number" required>
           <el-input-number
+              id="usage-apply-number"
               v-model="applyForm.number"
               :min="1"
               :max="100"
@@ -88,7 +91,7 @@
 
         <!-- 原类型选择 -->
         <el-form-item label="领用类型" prop="type" required>
-          <el-select v-model="applyForm.type" placeholder="请选择">
+          <el-select id="usage-apply-type" v-model="applyForm.type" placeholder="请选择">
             <el-option
                 v-for="t in usageTypes"
                 :key="t.value"
@@ -101,6 +104,7 @@
         <!-- 说明字段 -->
         <el-form-item label="申请说明">
           <el-input
+              id="usage-apply-desc"
               v-model="applyForm.description"
               type="textarea"
               :rows="3"
@@ -110,8 +114,8 @@
       </el-form>
 
       <template #footer>
-        <el-button @click="applyDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitApply">提交</el-button>
+        <el-button id="usage-apply-cancel" @click="applyDialogVisible = false">取消</el-button>
+        <el-button id="usage-apply-submit" type="primary" @click="submitApply">提交</el-button>
       </template>
     </el-dialog>
   </div>

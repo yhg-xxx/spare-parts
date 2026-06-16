@@ -1,8 +1,9 @@
 <template>
   <div>
     <!-- 批量操作按钮 -->
-    <div style="margin-bottom: 20px;">
+    <div id="transfer-audit-actions" style="margin-bottom: 20px;">
       <el-button
+          id="transfer-audit-approve-all"
           type="success"
           :disabled="selectedTransfers.length === 0"
           @click="handleBatchApprove"
@@ -10,6 +11,7 @@
         一键通过
       </el-button>
       <el-button
+          id="transfer-audit-reject-all"
           type="danger"
           :disabled="selectedTransfers.length === 0"
           @click="handleBatchReject"

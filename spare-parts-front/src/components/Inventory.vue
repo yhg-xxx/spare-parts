@@ -5,6 +5,7 @@
       <el-card shadow="never" class="search-card">
         <div class="search-group">
           <el-input
+              id="inventory-sn-search"
               v-model="searchSn"
               placeholder="输入SN号查询全生命周期信息"
               class="sn-input"
@@ -14,6 +15,7 @@
             <template #append>
               <div class="button-group">
                 <el-button
+                    id="inventory-search-btn"
                     type="primary"
                     class="search-btn"
                     @click="handleSnSearch"
@@ -21,6 +23,7 @@
                   查询
                 </el-button>
                 <el-button
+                    id="inventory-clear-btn"
                     class="clear-btn"
                     @click="handleClearSearch"
                 >
@@ -206,7 +209,7 @@
     </div>
     <div class="inventory-section">
     <!-- 新增库存按钮 -->
-    <el-button @click="openAddDailyDialog" type="primary" :icon="Plus">新增库存</el-button>
+    <el-button id="inventory-add-btn" @click="openAddDailyDialog" type="primary" :icon="Plus">新增库存</el-button>
     <!-- 库存列表 -->
     <el-table :data="dailyList" stripe style="width: 100%">
       <el-table-column prop="partName" label="备件名称" />
@@ -235,14 +238,15 @@
       <el-form :model="addDailyForm" ref="addDailyFormRef" label-width="100px">
 
         <el-form-item label="备件名称" prop="partName">
-          <el-input v-model="addDailyForm.partName" placeholder="请输入备件编号"></el-input>
+          <el-input id="inventory-add-partName" v-model="addDailyForm.partName" placeholder="请输入备件编号"></el-input>
         </el-form-item>
         <el-form-item label="库位名称" prop="locationName">
-          <el-input v-model="addDailyForm.locationName" placeholder="请输入库位编号"></el-input>
+          <el-input id="inventory-add-locationName" v-model="addDailyForm.locationName" placeholder="请输入库位编号"></el-input>
         </el-form-item>
         <!-- 新增库存对话框 -->
         <el-form-item label="安全库存" prop="safetyStock">
           <el-input-number
+              id="inventory-add-safetyStock"
               v-model="addDailyForm.safetyStock"
               :min="0"
               :max="1000"

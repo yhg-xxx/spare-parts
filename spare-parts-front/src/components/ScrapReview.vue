@@ -4,6 +4,7 @@
     <!-- 筛选条件 -->
     <div class="filter-container">
       <el-select
+          id="scrap-review-status-select"
           v-model="selectedStatus"
           multiple
           collapse-tags
@@ -73,7 +74,7 @@
         </el-form-item>
 
         <el-form-item label="审核状态" prop="partStatus" required>
-          <el-select v-model="currentRecord.partStatus">
+          <el-select id="scrap-review-status-input" v-model="currentRecord.partStatus">
             <el-option
                 v-for="status in statusOptions"
                 :key="status"
@@ -90,6 +91,7 @@
             required
         >
           <el-input
+              id="scrap-review-disposal"
               v-model="currentRecord.disposalMethod"
               placeholder="请输入处置方式"
           />
@@ -102,6 +104,7 @@
             required
         >
           <el-input
+              id="scrap-review-executor"
               v-model="currentRecord.executor"
               placeholder="请输入执行人"
           />
@@ -109,8 +112,8 @@
       </el-form>
 
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">提交审核</el-button>
+        <el-button id="scrap-review-cancel-btn" @click="dialogVisible = false">取消</el-button>
+        <el-button id="scrap-review-submit-btn" type="primary" @click="handleSubmit">提交审核</el-button>
       </template>
     </el-dialog>
   </div>

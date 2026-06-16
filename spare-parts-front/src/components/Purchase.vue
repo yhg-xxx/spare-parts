@@ -4,6 +4,7 @@
     <el-row :gutter="20" class="mb-4">
       <el-col v-if="showAddButton" :span="12">
         <el-button
+            id="purchase-add-btn"
             type="primary"
             :icon="Plus"
             @click="openAddDailyDialog">
@@ -14,17 +15,19 @@
       <el-col :span="12" class="flex items-center justify-end">
         <div class="flex gap-2">
           <el-input
+              id="purchase-search-input"
               v-model="querySparePartName"
               placeholder="请输入备件名称"
               clearable
               style="width: 200px"/>
           <el-button
+              id="purchase-search-btn"
               type="primary"
               :icon="Search"
               @click="handleSearch">
             查询
           </el-button>
-          <el-button @click="clearSearch">
+          <el-button id="purchase-clear-btn" @click="clearSearch">
             清空
           </el-button>
         </div>
@@ -174,6 +177,7 @@
             label="需求车站"
             prop="station">
           <el-input
+              id="purchase-station"
               v-model="addDailyForm.station"
               placeholder="请输入需求车站"
               clearable/>
@@ -183,6 +187,7 @@
             label="所属工区"
             prop="workshop">
           <el-input
+              id="purchase-workshop"
               v-model="addDailyForm.workshop"
               placeholder="请输入所属工区"
               clearable/>
@@ -192,6 +197,7 @@
             label="备件名称"
             prop="spare_part_name">
           <el-input
+              id="purchase-spare-part-name"
               v-model="addDailyForm.spare_part_name"
               placeholder="请输入备件名称"
               clearable/>
@@ -201,6 +207,7 @@
             label="备件型号"
             prop="spare_part_model">
           <el-input
+              id="purchase-spare-part-model"
               v-model="addDailyForm.spare_part_model"
               placeholder="请输入备件型号"
               clearable/>
@@ -210,6 +217,7 @@
             label="数量"
             prop="number">
           <el-input
+              id="purchase-number"
               v-model="addDailyForm.number"
               placeholder="请输入备件数量"
               clearable/>

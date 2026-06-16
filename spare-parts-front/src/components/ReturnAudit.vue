@@ -1,9 +1,9 @@
 <!-- ReturnAudit.vue 返还审核组件 -->
 <template>
   <div>
-    <el-tabs v-model="activeTab" @tab-change="fetchData">
-      <el-tab-pane label="全部" name="all" />
-      <el-tab-pane label="待审核" name="pending" />
+    <el-tabs id="return-audit-tabs" v-model="activeTab" @tab-change="fetchData">
+      <el-tab-pane id="return-audit-tab-all" label="全部" name="all" />
+      <el-tab-pane id="return-audit-tab-pending" label="待审核" name="pending" />
     </el-tabs>
 
     <el-table
@@ -33,8 +33,9 @@
       </el-table-column>
     </el-table>
 
-    <div class="mt-4">
+    <div id="return-audit-actions" class="mt-4">
       <el-button
+          id="return-audit-approve-btn"
           type="success"
           :disabled="selectedAudits.length === 0 || activeTab !== 'pending'"
           @click="handleBatchApprove"

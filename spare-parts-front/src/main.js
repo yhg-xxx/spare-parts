@@ -5,11 +5,12 @@ import App from './App.vue'
 import router from "@/router.js";
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-// 全局配置 axios 携带 Cookie
-axios.defaults.withCredentials = true;
-const app = createApp(App)
 import axios from "axios";
-axios.defaults.baseURL ='http://localhost:8080'
+
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = 'http://localhost:8080'
+
+const app = createApp(App)
 app.use(ElementPlus,{
     locale:zhCn
 })

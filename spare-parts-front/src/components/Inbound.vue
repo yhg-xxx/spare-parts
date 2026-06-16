@@ -5,6 +5,7 @@
       <el-col :span="12">
         <!-- 新增入库按钮 -->
         <el-button
+            id="inbound-add-btn"
             type="primary"
             :icon="Plus"
             @click="openAddDailyDialog"
@@ -13,6 +14,7 @@
         </el-button>
         <!-- 新增下载模板按钮 -->
         <el-button
+            id="inbound-download-btn"
             type="success"
             :icon="Download"
             @click="downloadTemplate"
@@ -21,6 +23,7 @@
         </el-button>
         <!-- 在下载模板按钮后添加导入按钮 -->
         <el-button
+            id="inbound-import-btn"
             type="warning"
             :icon="Upload"
             @click="openImportDialog"
@@ -31,6 +34,7 @@
       <el-col :span="12" class="flex items-center justify-end">
         <div class="flex gap-2 flex-wrap">
           <el-input
+              id="inbound-search-partname"
               v-model="queryParams.sparePartName"
               placeholder="备件名称"
               clearable
@@ -38,6 +42,7 @@
           ></el-input>
 
           <el-input
+              id="inbound-search-sn"
               v-model="queryParams.sn"
               placeholder="SN号"
               clearable
@@ -45,6 +50,7 @@
           ></el-input>
 
           <el-date-picker
+              id="inbound-search-date"
               v-model="queryParams.dateRange"
               type="daterange"
               range-separator="-"
@@ -55,11 +61,12 @@
           />
 
           <el-button
+              id="inbound-search-btn"
               type="primary"
               @click="handleSearch"
               :icon="Search"
           >查询</el-button>
-          <el-button @click="clearSearch">重置</el-button>
+          <el-button id="inbound-reset-btn" @click="clearSearch">重置</el-button>
         </div>
       </el-col>
     </el-row>

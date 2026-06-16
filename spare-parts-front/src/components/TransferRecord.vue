@@ -26,9 +26,9 @@
       <!-- 左侧操作组 -->
       <div class="left-actions">
         <el-button-group>
-          <el-button type="primary" @click="openAddTransferDialog" :icon="Plus">新增调拨</el-button>
-          <el-button type="primary" @click="openBatchTransferDialog" :icon="Plus">批量调拨</el-button>
-          <el-button type="primary" @click="downloadTemplate" :icon="Download">下载模板</el-button>
+          <el-button id="transfer-add-btn" type="primary" @click="openAddTransferDialog" :icon="Plus">新增调拨</el-button>
+          <el-button id="transfer-batch-btn" type="primary" @click="openBatchTransferDialog" :icon="Plus">批量调拨</el-button>
+          <el-button id="transfer-download-btn" type="primary" @click="downloadTemplate" :icon="Download">下载模板</el-button>
         </el-button-group>
       </div>
 
@@ -47,6 +47,7 @@
 
           <!-- 状态筛选 -->
           <el-select
+              id="transfer-status-filter"
               v-model="selectedStatus"
               multiple
               collapse-tags

@@ -2,7 +2,7 @@
   <div class="fault-order-container">
     <!-- 操作栏 -->
     <div class="mb-4">
-      <el-button type="primary" @click="openAddDialog">新增故障工单</el-button>
+      <el-button id="fault-add-btn" type="primary" @click="openAddDialog">新增故障工单</el-button>
     </div>
 
     <!-- 数据表格 -->
@@ -22,6 +22,7 @@
         <template #default="{ row }">
           <!-- 库管员验收按钮 -->
           <el-button
+              id="fault-acceptance-{{row.faultId}}"
               v-if="currentUser.role === '库管员' && row.workOrderStatus === '待验收'"
               size="small"
               type="danger"
@@ -31,6 +32,7 @@
 
           <!-- 管理员编辑按钮 -->
           <el-button
+              id="fault-edit-{{row.faultId}}"
               v-if="currentUser.role === '管理员'"
               size="small"
               type="primary"
@@ -41,6 +43,7 @@
           <!-- 现场工程师操作按钮 -->
           <template v-if="currentUser.role === '二级维修人员'">
             <el-button
+                id="fault-accept-{{row.faultId}}"
                 v-if="row.workOrderStatus === '待处理'"
                 size="small"
                 type="success"
@@ -48,6 +51,7 @@
               接单
             </el-button>
             <el-button
+                id="fault-review-{{row.faultId}}"
                 v-if="row.workOrderStatus === '处理中'"
                 size="small"
                 type="warning"

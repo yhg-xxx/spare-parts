@@ -10,6 +10,7 @@
       <h2>备件报废申请</h2>
       <el-form-item label="备件SN号" prop="sn" required>
         <el-autocomplete
+            id="scrap-sn-input"
             v-model="form.sn"
             :fetch-suggestions="querySearch"
             placeholder="请输入备件序列号"
@@ -26,6 +27,7 @@
         <!-- 报废原因输入 -->
         <el-form-item label="报废原因" prop="scrapReason" required>
           <el-input
+              id="scrap-reason-input"
               type="textarea"
               v-model="form.scrapReason"
               :rows="3"
@@ -36,13 +38,14 @@
         <!-- 照片上传 -->
         <el-form-item label="现场照片" prop="damagePhoto">
           <el-upload
+              id="scrap-photo-upload"
               action="#"
               :auto-upload="false"
               :on-change="handlePhotoChange"
               :show-file-list="false"
               :class="{ 'is-invalid': !photoFile }"
           >
-            <el-button size="small" type="primary">点击上传</el-button>
+            <el-button id="scrap-upload-btn" size="small" type="primary">点击上传</el-button>
             <span v-if="photoFile" class="photo-name">
               {{ photoFile.name }}
               <el-icon @click.stop="removePhoto"><Close /></el-icon>
@@ -53,6 +56,7 @@
 
         <el-form-item>
           <el-button
+              id="scrap-submit-btn"
               type="primary"
               @click="submitForm"
               :loading="isSubmitting"

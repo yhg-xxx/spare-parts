@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- 新增仓库按钮 -->
-    <el-button @click="openAddDailyDialog" type="primary" :icon="Plus">新增仓库
+    <el-button id="warehouse-add-btn" @click="openAddDailyDialog" type="primary" :icon="Plus">新增仓库
 </el-button>
     <!-- 仓库列表 -->
     <el-table :data="dailyList" stripe style="width: 100%">
@@ -34,16 +34,16 @@
       <el-form :model="addDailyForm" ref="addDailyFormRef" label-width="100px">
 
         <el-form-item label="仓库编码" prop="location_code">
-          <el-input v-model="addDailyForm.location_code" placeholder="请输入仓库编码"></el-input>
+          <el-input id="warehouse-add-code" v-model="addDailyForm.location_code" placeholder="请输入仓库编码"></el-input>
         </el-form-item>
         <el-form-item label="仓库名称" prop="locationName">
-          <el-input v-model="addDailyForm.locationName" placeholder="请输入仓库名称"></el-input>
+          <el-input id="warehouse-add-name" v-model="addDailyForm.locationName" placeholder="请输入仓库名称"></el-input>
         </el-form-item>
         <el-form-item label="仓库描述" prop="description">
-          <el-input v-model="addDailyForm.description" placeholder="仓库描述"></el-input>
+          <el-input id="warehouse-add-desc" v-model="addDailyForm.description" placeholder="仓库描述"></el-input>
         </el-form-item>
         <el-form-item label="库管人" prop="name">
-          <el-input v-model="addDailyForm.name" placeholder="库管人"></el-input>
+          <el-input id="warehouse-add-manager" v-model="addDailyForm.name" placeholder="库管人"></el-input>
         </el-form-item>
       </el-form>
       <!--foot-->

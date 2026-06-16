@@ -49,6 +49,7 @@
       <el-table-column label="操作" width="180">
         <template #default="{row}">
           <el-button
+              id="usage-review-approve-{{row.id}}"
               v-if="row.status === '待审核'"
               type="success"
               size="small"
@@ -57,6 +58,7 @@
             通过
           </el-button>
           <el-button
+              id="usage-review-reject-{{row.id}}"
               v-if="row.status === '待审核'"
               type="danger"
               size="small"
@@ -66,6 +68,7 @@
           </el-button>
           <!-- 出库操作 -->
           <el-button
+              id="usage-review-out-{{row.id}}"
               v-if="row.status === '待出库'"
               type="primary"
               size="small"
@@ -137,15 +140,16 @@
 
       <template #footer>
         <div style="display: flex; align-items: center; gap: 16px">
-          <div class="selection-counter">
+          <div id="usage-review-selection-counter" class="selection-counter">
             已选: {{ selectedSpares.length }}/{{ currentApply.number }}
             <el-text v-if="selectedSpares.length < currentApply.number" type="warning" size="small">
               （还需选择{{ currentApply.number - selectedSpares.length }}个）
             </el-text>
           </div>
 
-          <el-button @click="outDialogVisible = false">取消</el-button>
+          <el-button id="usage-review-out-cancel" @click="outDialogVisible = false">取消</el-button>
           <el-button
+              id="usage-review-out-confirm"
               type="primary"
               :disabled="selectedSpares.length !== currentApply.number"
               @click="confirmOut"

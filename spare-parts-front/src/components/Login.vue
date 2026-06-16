@@ -11,6 +11,7 @@
       <el-form class="login-form">
         <el-form-item>
           <el-input
+              id="login-username"
               v-model="form.username"
               placeholder="工号/用户名"
               class="custom-input"
@@ -21,6 +22,7 @@
 
         <el-form-item>
           <el-input
+              id="login-password"
               v-model="form.password"
               type="password"
               placeholder="登录密码"
@@ -39,6 +41,7 @@
         </div>
 
         <el-button
+            id="login-submit-btn"
             class="login-btn"
             type="primary"
             size="large"
